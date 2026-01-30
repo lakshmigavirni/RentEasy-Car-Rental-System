@@ -62,7 +62,7 @@ public class BookingController {
             bookingService.deleteBooking(id);
             return ResponseEntity.noContent().build();
         } catch (RuntimeException e) {
-            return ResponseEntity.notFound().build();
+             return ResponseEntity.notFound().build();
         }
     }
     @GetMapping("/details/{id}")

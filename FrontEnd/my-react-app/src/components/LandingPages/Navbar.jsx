@@ -82,7 +82,7 @@ const Navbar = () => {
                     <Car className="h-6 w-6 text-white" />
                   </div>
                   <span className="text-2xl font-bold bg-gradient-to-r from-red-600 to-red-800 bg-clip-text text-transparent">
-                    SwiftRides
+                    RentEasy
                   </span>
                 </div>
 

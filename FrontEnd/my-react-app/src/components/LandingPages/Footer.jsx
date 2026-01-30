@@ -11,7 +11,7 @@ const Footer = () => {
             <div>
               <div className="flex items-center mb-4">
                 <Car className="h-6 w-6 text-blue-400" />
-                <span className="ml-2 text-lg font-bold text-white">SwiftRides</span>
+                <span className="ml-2 text-lg font-bold text-white">RentEasy</span>
               </div>
               <p className="mb-4">Making car rentals easy, affordable, and accessible for everyone.</p>
               <div className="flex space-x-4">
@@ -69,7 +69,7 @@ const Footer = () => {
           </div>
           
           <div className="border-t border-gray-700 mt-12 pt-8 text-center">
-            <p>&copy; {new Date().getFullYear()} SwiftRides Car Rental. All rights reserved.</p>
+            <p>&copy; {new Date().getFullYear()} RentEasy Car Rental. All rights reserved.</p>
           </div>
         </div>
       </footer>

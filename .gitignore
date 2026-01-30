@@ -4,3 +4,17 @@
 .env.*.local
 
 # ... existing code ... 
+# IntelliJ
+.idea/
+*.iml
+
+# Maven
+**/target/
+.mvn/
+
+# Node
+node_modules/
+npm-debug.log
+
+# OS
+.DS_Store

@@ -106,10 +106,7 @@ const ContactUs = () => {
   ];
 
   const quickStats = [
-    { icon: Clock, stat: '< 2 Hours', label: 'Average Response Time' },
-    { icon: Star, stat: '4.9/5', label: 'Customer Satisfaction' },
-    { icon: Mail, stat: '99.5%', label: 'Email Delivery Rate' },
-    { icon: CheckCircle, stat: '24/7', label: 'Support Availability' }
+   
   ];
 
   const faqItems = [
@@ -319,32 +316,7 @@ const ContactUs = () => {
         </div>
       </div>
 
-      {/* Alternative Contact */}
-      <div className="py-12 sm:py-16 lg:py-20">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="bg-gradient-to-r from-red-500 to-orange-600 rounded-2xl sm:rounded-3xl p-8 sm:p-12 text-white text-center">
-            <Mail className="w-16 h-16 mx-auto mb-6 text-white/90" />
-            <h2 className="text-2xl sm:text-3xl font-bold mb-4">Prefer Direct Email?</h2>
-            <p className="text-lg sm:text-xl text-blue-100 mb-6 max-w-2xl mx-auto">
-              You can also reach us directly at our dedicated support email addresses
-            </p>
-            <div className="grid sm:grid-cols-2 gap-4 sm:gap-8 max-w-4xl mx-auto">
-              <div className="bg-white/10 backdrop-blur-sm rounded-xl p-6">
-                <h3 className="font-semibold mb-2">General Support</h3>
-                <a href="mailto:druman200012@gmail.com" className="text-blue-200 hover:text-white transition-colors">
-                  Druman Kaneriya
-                </a>
-              </div>
-              <div className="bg-white/10 backdrop-blur-sm rounded-xl p-6">
-                <h3 className="font-semibold mb-2">Booking Help</h3>
-                <a href="mailto:druman200012@gmail.com" className="text-blue-200 hover:text-white transition-colors">
-                  Vasu Amrutiya
-                </a>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
+     
 
       {/* FAQ Section */}
       <div id="faq-section" className="py-12 sm:py-16 lg:py-20 bg-white/50 backdrop-blur-sm">

@@ -6,6 +6,8 @@ import BookCarForm from "../BookingCar/bookCarForm"; // Add this import if it's 
 import { useNavigate, useLocation } from "react-router-dom";
 import { useLoading } from "../Loader/LoadingProvider";
 import { MapPin, Calendar, Search } from 'lucide-react';
+import url from "../URL";
+
 
 const CarRentalPlatform = () => {
   const [filteredCars, setFilteredCars] = useState([]);
@@ -55,7 +57,7 @@ const CarRentalPlatform = () => {
     const fetchData = async () => {
       showLoader("Loading cars...");
       try {
-        const response = await fetch("http://localhost:9090/api/rental-company", {
+        const response = await fetch(`${url}/api/rental-company`, {
           method: "GET",
           headers: {
             "Content-Type": "application/json",
@@ -131,13 +133,15 @@ const CarRentalPlatform = () => {
     showLoader('Searching cars...');
     try {
       const token = localStorage.getItem('token');
-      let url;
-      if (city && city.trim() !== '') {
-        url = `http://localhost:9090/api/search?city=${city}&pickupDate=${pickup}&returnDate=${ret}`;
-      } else {
-        url = `http://localhost:9090/api/search?pickupDate=${pickup}&returnDate=${ret}`;
-      }
-      const response = await fetch(url, {
+      let searchUrl;
+
+if (city && city.trim() !== '') {
+  searchUrl = `${url}/api/search?city=${city}&pickupDate=${pickup}&returnDate=${ret}`;
+} else {
+  searchUrl = `${url}/api/search?pickupDate=${pickup}&returnDate=${ret}`;
+}
+
+      const response = await fetch(searchUrl, {
         method: 'GET',
         headers: {
           Authorization: `Bearer ${token}`,

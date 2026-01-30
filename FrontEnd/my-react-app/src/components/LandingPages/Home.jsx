@@ -43,7 +43,7 @@ export default function Home() {
       <section className="py-16 bg-white">
         <div className="container mx-auto px-4">
           <h2 className="text-3xl font-bold text-center mb-12 text-gray-800">
-            Why Choose DrivEasy?
+            Why Choose RentEasy?
           </h2>
 
           <div className="grid md:grid-cols-3 gap-8">
@@ -138,52 +138,7 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Testimonials Section */}
-      <section className="py-16 bg-gray-50">
-        <div className="container mx-auto px-4">
-          <h2 className="text-3xl font-bold text-center mb-12 text-gray-800">
-            What Our Customers Say
-          </h2>
-
-          <div className="grid md:grid-cols-2 gap-8">
-            {testimonials.map((testimonial) => (
-              <div
-                key={testimonial.id}
-                className="bg-white p-6 rounded-lg shadow-md"
-              >
-                <div className="flex items-center mb-4">
-                  <div className="bg-blue-100 h-12 w-12 rounded-full flex items-center justify-center text-blue-600 font-bold text-xl">
-                    {testimonial.name.charAt(0)}
-                  </div>
-                  <div className="ml-4">
-                    <h4 className="font-medium text-gray-800">
-                      {testimonial.name}
-                    </h4>
-                    <p className="text-sm text-gray-600">
-                      {testimonial.location}
-                    </p>
-                  </div>
-                </div>
-
-                <p className="text-gray-700 mb-4">"{testimonial.comment}"</p>
-
-                <div className="flex">
-                  {[...Array(5)].map((_, i) => (
-                    <Star
-                      key={i}
-                      className={`h-5 w-5 ${
-                        i < testimonial.rating
-                          ? "text-yellow-500 fill-current"
-                          : "text-gray-300"
-                      }`}
-                    />
-                  ))}
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
+      
 
       <Footer />
     </div>

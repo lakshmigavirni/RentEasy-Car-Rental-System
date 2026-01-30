@@ -7,10 +7,7 @@ import { useNavigate } from 'react-router-dom';
 const AboutUs = () => {
   const navigate=useNavigate();
   const stats = [
-    { number: '500+', label: 'Partner Companies', icon: Users },
-    { number: '50,000+', label: 'Available Cars', icon: Car },
-    { number: '2M+', label: 'Happy Customers', icon: Award },
-    { number: '99.9%', label: 'Uptime Guarantee', icon: Shield }
+  
   ];
 
   const features = [
@@ -112,18 +109,12 @@ const AboutUs = () => {
               <h2 className="text-3xl sm:text-4xl font-bold text-gray-900 mb-4 sm:mb-6">Our Story</h2>
               <div className="space-y-4 sm:space-y-6 text-gray-600 text-base sm:text-lg leading-relaxed">
                 <p>
-                  Founded in 2018, RentEasy began with a simple mission: make car rentals accessible, 
-                  affordable, and hassle-free for everyone. We noticed that travelers were spending 
-                  hours comparing prices across different rental companies, often missing out on better deals.
+                 RentEasy began as a small project with a clear goal: to make car rentals simple and convenient for everyone. We noticed that finding the right car at a good price often took too much time, and we wanted to create a better solution. </p>
+                <p>
+                 At the start, we focused on building the basics of our platform. Our aim is to help users quickly search for available cars, compare options, and book the one that fits their needs. We’re keeping things simple while learning how to make the process smooth and reliable.
                 </p>
                 <p>
-                  Today, we've built the world's most comprehensive car rental platform, partnering with 
-                  over 500 rental companies globally. Our proprietary technology instantly compares millions 
-                  of vehicles to guarantee you're getting the best possible price, every time.
-                </p>
-                <p>
-                  From weekend getaways to business trips, we've helped over 2 million customers find 
-                  their perfect rental car, saving them an average of 30% compared to booking directly.
+                 Our journey is just beginning, and every small step helps us improve and get closer to our goal: making car rentals fast, easy, and stress-free for everyone.
                 </p>
               </div>
             </div>
@@ -165,43 +156,6 @@ const AboutUs = () => {
                 </div>
               );
             })}
-          </div>
-        </div>
-      </div>
-
-      {/* Team Section */}
-      <div className="py-12 sm:py-16 lg:py-20">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-12 sm:mb-16">
-            <h2 className="text-3xl sm:text-4xl font-bold text-gray-900 mb-3 sm:mb-4">Meet Our Developers</h2>
-            <p className="text-lg sm:text-xl text-gray-600 max-w-2xl mx-auto px-4">
-              The visionaries behind the world's most trusted car rental platform
-            </p>
-          </div>
-          <div className="grid sm:grid-cols-2 lg:grid-cols-2 gap-8 sm:gap-12">
-            {team.map((member, index) => (
-              <div key={index} className="text-center group">
-                <div className="relative mb-4 sm:mb-6">
-                  <div 
-                    className="w-32 h-32 sm:w-48 sm:h-48 mx-auto rounded-full overflow-hidden ring-4 ring-white shadow-2xl group-hover:scale-105 transition-transform duration-300 cursor-pointer"
-                    onClick={() => window.open(member.link, '_blank')}
-                    title={`Visit ${member.name}'s GitHub profile`}
-                  >
-                    <img 
-                      src={member.image} 
-                      alt={member.name}
-                      className="w-full h-full object-cover"
-                    />
-                  </div>
-                  <div className="absolute -bottom-1 sm:-bottom-2 left-1/2 transform -translate-x-1/2 w-8 h-8 sm:w-12 sm:h-12 bg-gradient-to-r from-blue-500 to-indigo-500 rounded-full flex items-center justify-center">
-                    <Users className="w-4 h-4 sm:w-6 sm:h-6 text-white" />
-                  </div>
-                </div>
-                <h3 className="text-xl sm:text-2xl font-bold text-gray-900 mb-1 sm:mb-2">{member.name}</h3>
-                <p className="text-blue-600 font-semibold mb-3 sm:mb-4 text-sm sm:text-base">{member.role}</p>
-                <p className="text-gray-600 leading-relaxed text-sm sm:text-base px-2">{member.description}</p>
-              </div>
-            ))}
           </div>
         </div>
       </div>

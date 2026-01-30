@@ -52,7 +52,7 @@ const handleSearch = async () => {
     hideLoader();
   };
   return (
-    <section className="relative bottom-20 min-h-screen bg-gradient-to-br from-red-500 via-red-700 to-orange-600 text-white overflow-hidden">
+    <section className="relative bottom-20 min-h-screen bg-gradient-to-br from-red-500 via-blue-700 to-red-600 text-white overflow-hidden">
       {/* Animated background elements */}
       <div className="absolute inset-0">
         <div className="absolute top-10 left-10 w-32 h-32 bg-red-400/20 rounded-full blur-xl animate-pulse"></div>
@@ -74,21 +74,7 @@ const handleSearch = async () => {
         <div className="grid lg:grid-cols-2 gap-12 items-center min-h-[80vh]">
           {/* Left Content */}
           <div className="space-y-8">
-            {/* Trust indicators */}
-            <div className="flex flex-wrap gap-4 items-center text-sm">
-              <div className="flex items-center gap-1 bg-white/10 backdrop-blur-sm rounded-full px-3 py-1">
-                <Star className="h-4 w-4 text-yellow-400 fill-current" />
-                <span>4.9/5 Rating</span>
-              </div>
-              <div className="flex items-center gap-1 bg-white/10 backdrop-blur-sm rounded-full px-3 py-1">
-                <Award className="h-4 w-4 text-pink-300" />
-                <span>Award Winning</span>
-              </div>
-              <div className="flex items-center gap-1 bg-white/10 backdrop-blur-sm rounded-full px-3 py-1">
-                <Shield className="h-4 w-4 text-green-400" />
-                <span>Fully Insured</span>
-              </div>
-            </div>
+            
 
             {/* Main heading */}
             <div className="space-y-6">
@@ -99,11 +85,13 @@ const handleSearch = async () => {
                 </span>
                 for Any Journey
               </h1>
+              
               <p className="text-xl lg:text-2xl text-red-100 leading-relaxed max-w-lg">
-                Choose from our premium selection of vehicles at competitive rates. 
+                Explore a wide range of quality vehicles at affordable prices, with complete transparency 
                 <span className="text-pink-300 font-semibold"> No hidden fees.</span> 
                 <span className="text-red-200"> Just pure driving pleasure.</span>
               </p>
+              
             </div>
 
             {/* Key features */}
@@ -196,27 +184,13 @@ const handleSearch = async () => {
                 {/* Additional info */}
                 <div className="text-center pt-4 border-t border-gray-200">
                   <p className="text-sm text-gray-600">
-                    🚗 Over <span className="font-semibold text-red-600">10,000+</span> vehicles available
+                    
                   </p>
                 </div>
               </div>
             </div>
 
-            {/* Quick stats */}
-            <div className="grid grid-cols-3 gap-4">
-              <div className="bg-white/10 backdrop-blur-sm rounded-xl p-4 text-center border border-white/20">
-                <div className="text-2xl font-bold text-pink-300">500K+</div>
-                <div className="text-sm text-red-100">Happy Customers</div>
-              </div>
-              <div className="bg-white/10 backdrop-blur-sm rounded-xl p-4 text-center border border-white/20">
-                <div className="text-2xl font-bold text-pink-300">50+</div>
-                <div className="text-sm text-red-100">Locations</div>
-              </div>
-              <div className="bg-white/10 backdrop-blur-sm rounded-xl p-4 text-center border border-white/20">
-                <div className="text-2xl font-bold text-pink-300">24/7</div>
-                <div className="text-sm text-red-100">Support</div>
-              </div>
-            </div>
+            
           </div>
         </div>
       </div>
