@@ -10,7 +10,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 
 import java.util.List;
 
-@FeignClient(name = "review-service")
+@FeignClient(name = "REVIEW-SERVICE")
 public interface ReviewClient {
     @PostMapping("/api/reviews/car/{carId}/customer/{customerId}")
     public ReviewDto createReview(@PathVariable("carId") Integer carId, @PathVariable("customerId") Integer customerId, @RequestBody ReviewDto request);

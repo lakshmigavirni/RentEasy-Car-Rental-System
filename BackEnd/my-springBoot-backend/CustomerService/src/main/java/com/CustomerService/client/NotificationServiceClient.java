@@ -9,7 +9,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 
 
-@FeignClient(name = "notification-service")
+@FeignClient(name = "NOTIFICATION-SERVICE")
 public interface NotificationServiceClient {
     @PostMapping("/api/notification/send/answer")
     ResponseEntity<String> sendQueryAnswer(ContactUs contactUs);

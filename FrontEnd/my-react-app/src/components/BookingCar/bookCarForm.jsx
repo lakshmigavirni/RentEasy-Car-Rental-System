@@ -2,6 +2,7 @@ import { useState, useEffect } from "react"
 import { Car, ArrowLeft, Star, Users, MapPin, CheckCircle, Calendar, Clock, CreditCard } from "lucide-react"
 import { useNavigate } from "react-router-dom";
 import { useLoading } from "../Loader/LoadingProvider";
+import url from "../URL";
 
 const BookCarForm = ({ car, company, onBack }) => {
 
@@ -57,7 +58,16 @@ const BookCarForm = ({ car, company, onBack }) => {
     };
 
     fetchExchangeRates();
+    fetchExchangeRates();
   }, []);
+
+  // Check authentication status
+  useEffect(() => {
+    if (!token) {
+      alert("You must be logged in to book a car.");
+      navigate("/login");
+    }
+  }, [token, navigate]);
 
   const validateDates = () => {
     const today = new Date()
@@ -85,10 +95,10 @@ const BookCarForm = ({ car, company, onBack }) => {
 
   const convertCurrency = (amount, fromCurrency, toCurrency) => {
     if (!exchangeRates[toCurrency.toUpperCase()]) return amount;
-    
+
     // Convert from INR to target currency
     const convertedAmount = amount * exchangeRates[toCurrency.toUpperCase()];
-    
+
     // Round to 2 decimal places for most currencies, except JPY which doesn't use decimals
     if (toCurrency.toLowerCase() === 'jpy') {
       return Math.round(convertedAmount);
@@ -135,7 +145,8 @@ const BookCarForm = ({ car, company, onBack }) => {
     };
 
     try {
-      const resId = await fetch("http://localhost:8084/auth/user/email", {
+
+      const resId = await fetch(`${url}/auth/user/email`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -143,10 +154,18 @@ const BookCarForm = ({ car, company, onBack }) => {
         },
         body: JSON.stringify({ email }),
       });
+
+      if (!resId.ok) {
+        if (resId.status === 403 || resId.status === 401) {
+          throw new Error("Session expired or invalid. Please login again.");
+        }
+        throw new Error("Failed to fetch user details");
+      }
+
       const Id = await resId.json();
       setId(Id);
-      
-      const response = await fetch(`http://localhost:9090/api/customers/${Id}/booking`, {
+
+      const response = await fetch(`${url}/api/customers/${Id}/booking`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -162,7 +181,7 @@ const BookCarForm = ({ car, company, onBack }) => {
 
       const data = await response.json();
       alert(`Booking submitted successfully! Reference: ${data.bookingReference}`);
-      
+
       const paymentPayload = {
         bookingId: Number(data.bookingId),
         companyId: Number(booking.companyID),
@@ -174,7 +193,7 @@ const BookCarForm = ({ car, company, onBack }) => {
       };
 
 
-      const paymentResponse = await fetch("http://localhost:9090/api/payments/create-session", {
+      const paymentResponse = await fetch(`${url}/api/payments/create-session`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

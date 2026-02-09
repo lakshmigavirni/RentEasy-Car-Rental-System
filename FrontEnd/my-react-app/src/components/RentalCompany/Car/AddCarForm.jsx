@@ -15,8 +15,8 @@ export default function AddCarForm({ onClose }) {
     seatingCapacity: "",
     features: "",
     imageUrls: [],
-    rcBookImage: "", 
-    status: "PENDING", 
+    rcBookImage: "",
+    status: "AVAILABLE",
   })
   const [isUploading, setIsUploading] = useState(false)
   const [uploadError, setUploadError] = useState("")
@@ -110,24 +110,25 @@ export default function AddCarForm({ onClose }) {
       dailyRate: Number.parseFloat(formData.dailyRate),
       seatingCapacity: Number.parseInt(formData.seatingCapacity),
       features: formData.features.split(",").map((feature) => feature.trim()),
-      rcbook: formData.rcBookImage,
+      RCbook: formData.rcBookImage,
     }
     delete formattedData.rcBookImage
     try {
       const token = localStorage.getItem("token")
       const email = localStorage.getItem("email")
-      const resId = await fetch("http://localhost:8084/auth/user/email", {
-        method: "POST",
+
+      const companyRes = await fetch(`${url}/api/rental-company/email/${email}`, {
+        method: "GET",
         headers: {
-          "Content-Type": "application/json",
           Authorization: `Bearer ${token}`,
         },
-        body: JSON.stringify({ email }),
-      })
+      });
 
-      const id = await resId.json()
+      if (!companyRes.ok) throw new Error("Failed to fetch company details");
+      const companyData = await companyRes.json();
+      const companyId = companyData.companyId;
 
-      const response = await fetch(`http://localhost:9090/api/rental-company/${id}/register-car`, {
+      const response = await fetch(`${url}/api/cars/companyid/${companyId}`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -341,7 +342,7 @@ export default function AddCarForm({ onClose }) {
               disabled
               readOnly
             />
-            <p className="text-sm text-gray-500 mt-1">Status will be set to PENDING for admin approval</p>
+            <p className="text-sm text-green-600 mt-1">Status set to AVAILABLE (visible to customers immediately)</p>
           </div>
 
           <div className="flex space-x-4 pt-4">

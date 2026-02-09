@@ -24,4 +24,12 @@ public class CarDto {
     private List<String> imageUrls;
     private String status;
     private String RCbook;
-} 
+
+    public String getRCbook() {
+        return RCbook;
+    }
+
+    public void setRCbook(String RCbook) {
+        this.RCbook = RCbook;
+    }
+}

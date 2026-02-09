@@ -2,6 +2,7 @@ import { useState } from "react"
 import { X, Eye, Check, Trash2, User, Phone, MapPin, CreditCard } from "lucide-react"
 import userImg from "../../../images/userImg.png"
 import { useLoading } from "../../Loader/LoadingProvider"
+import url from "../../URL"
 
 const VerificationModal = ({
   customer,
@@ -33,7 +34,7 @@ const VerificationModal = ({
     setIsDeleting(true);
     showLoader("Rejecting Customer...");
     try {
-      const response = await fetch(`http://localhost:9090/api/customers/block/${customer.customerId}`, {
+      const response = await fetch(`${url}/api/customers/block/${customer.customerId}`, {
         method: "PUT",
         headers: {
           Authorization: `Bearer ${token}`,
@@ -45,7 +46,7 @@ const VerificationModal = ({
       });
       if (response.ok) {
         // Notify customer via NotificationService
-        const notifyRes = await fetch("http://localhost:9090/api/notification/block-reason", {
+        const notifyRes = await fetch(`${url}/api/notification/block-reason`, {
           method: "POST",
           headers: {
             Authorization: `Bearer ${token}`,
@@ -87,8 +88,8 @@ const VerificationModal = ({
           Authorization: `Bearer ${token}`,
           "Content-Type": "application/json"
         },
-        body:{
-          drivingLicenseStatus:"rejected"
+        body: {
+          drivingLicenseStatus: "rejected"
         }
       });
       if (response.ok) {
@@ -116,8 +117,8 @@ const VerificationModal = ({
           Authorization: `Bearer ${token}`,
           "Content-Type": "application/json"
         },
-        body:{
-          drivingLicenseStatus:"verified"
+        body: {
+          drivingLicenseStatus: "verified"
         }
       });
       if (response.ok) {
@@ -289,7 +290,7 @@ const VerificationModal = ({
   )
 }
 
-const CustomerCard = ({ customer, onApprove = () => {}}) => {
+const CustomerCard = ({ customer, onApprove = () => { } }) => {
   const [isModalOpen, setIsModalOpen] = useState(false)
 
   const getStatusColor = (status) => {
@@ -317,9 +318,9 @@ const CustomerCard = ({ customer, onApprove = () => {}}) => {
             <div className="flex items-center gap-3">
               <div className="w-12 h-12 bg-white bg-opacity-20 rounded-full flex items-center justify-center">
                 <img
-                src={userImg}
-                alt={customer.fullname || 'Customer'}
-                className="w-12 h-12 rounded-full object-cover ring-2 ring-red-200 shadow-md"
+                  src={userImg}
+                  alt={customer.fullname || 'Customer'}
+                  className="w-12 h-12 rounded-full object-cover ring-2 ring-red-200 shadow-md"
                 />
               </div>
               <div>

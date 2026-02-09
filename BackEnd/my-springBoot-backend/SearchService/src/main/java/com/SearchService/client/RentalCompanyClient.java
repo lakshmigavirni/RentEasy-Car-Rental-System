@@ -6,7 +6,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 
 import java.util.List;
 
-@FeignClient(name = "rental-company-service")
+@FeignClient(name = "RENTAL-COMPANY-SERVICE")
 public interface RentalCompanyClient {
     @GetMapping("/api/rental-company")
     List<RentalCompany> getAllCompanies();

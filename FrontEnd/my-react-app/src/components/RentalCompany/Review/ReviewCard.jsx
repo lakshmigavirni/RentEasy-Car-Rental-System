@@ -3,7 +3,7 @@
 // import userImg from "../../../images/userImg.png"
 
 // export default function ReviewCard({ review }) {
-  
+
 //   const [showReplyForm, setShowReplyForm] = useState(false);
 //   const [showReportForm, setShowReportForm] = useState(false);
 //   const [replyMessage, setReplyMessage] = useState('');
@@ -282,7 +282,7 @@ import { Star, Calendar, Car, MessageSquareWarning, MessageSquareReply, X, Check
 import userImg from "../../../images/userImg.png"
 
 export default function ReviewCard({ review }) {
-  
+
   const [showReplyForm, setShowReplyForm] = useState(false);
   const [showReportForm, setShowReportForm] = useState(false);
   const [replyMessage, setReplyMessage] = useState('');
@@ -296,7 +296,7 @@ export default function ReviewCard({ review }) {
       alert('Please enter a reply message');
       return;
     }
-    
+
     try {
       const response = await fetch(`http://localhost:9090/api/reviews/${reviewData.id}/addReply`, {
         method: 'PUT',
@@ -320,7 +320,7 @@ export default function ReviewCard({ review }) {
 
   const handleReportSubmit = async () => {
     console.log(reviewData);
-    
+
     if (!reportReason) {
       alert('Please select a reason for reporting');
       return;
@@ -365,7 +365,7 @@ export default function ReviewCard({ review }) {
     ));
   };
 
-  const reviewData = review;  
+  const reviewData = review;
   const hasReply = reviewData.reply && reviewData.reply.trim() !== '';
   const hasReport = reviewData.reportReason && reviewData.reportReason.trim() !== '';
   const showButtons = !hasReply && !hasReport;

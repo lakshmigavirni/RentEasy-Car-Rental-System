@@ -14,7 +14,7 @@ const CarRentalPlatform = () => {
   const [selectedCar, setSelectedCar] = useState(null);
   const [carCompanyData, setCarCompanyData] = useState([]);
   const [error, setError] = useState("");
-  const { showLoader , hideLoader } = useLoading();
+  const { showLoader, hideLoader } = useLoading();
 
   const [filters, setFilters] = useState({
     seating: "",
@@ -135,11 +135,11 @@ const CarRentalPlatform = () => {
       const token = localStorage.getItem('token');
       let searchUrl;
 
-if (city && city.trim() !== '') {
-  searchUrl = `${url}/api/search?city=${city}&pickupDate=${pickup}&returnDate=${ret}`;
-} else {
-  searchUrl = `${url}/api/search?pickupDate=${pickup}&returnDate=${ret}`;
-}
+      if (city && city.trim() !== '') {
+        searchUrl = `${url}/api/search?city=${city}&pickupDate=${pickup}&returnDate=${ret}`;
+      } else {
+        searchUrl = `${url}/api/search?pickupDate=${pickup}&returnDate=${ret}`;
+      }
 
       const response = await fetch(searchUrl, {
         method: 'GET',
@@ -148,23 +148,38 @@ if (city && city.trim() !== '') {
           'Content-Type': 'application/json',
         },
       });
+
+      if (!response.ok) {
+        const errorMsg = await response.text();
+        console.error('Search API failed:', response.status, errorMsg);
+        setError(`Search failed: ${errorMsg || response.statusText}`);
+        return;
+      }
+
       const data = await response.json();
+      if (!Array.isArray(data)) {
+        console.error('Expected array from search but got:', data);
+        setError('Unexpected search result format');
+        return;
+      }
+
       const cars = data.map(item => ({
         ...item.car,
-        companyName: item.company.companyName,
-        companyCity: item.company.city,
-        companyAddress: item.company.address,
-        companyPhone: item.company.phoneNumber,
-        companyId: item.company.companyId,
+        companyName: item.company?.companyName || 'Unknown',
+        companyCity: item.company?.city,
+        companyAddress: item.company?.address,
+        companyPhone: item.company?.phoneNumber,
+        companyId: item.company?.companyId,
       }));
-      setAllFetchedCars(cars); // Store all fetched cars
-      setFilteredCars(applyFilters(cars)); // Apply filters initially
+      setAllFetchedCars(cars);
+      setFilteredCars(applyFilters(cars));
     } catch (error) {
-      setError('Error searching cars');
+      console.error('Search component catch:', error);
+      setError('Error searching cars. Check console for details.');
     } finally {
       hideLoader();
     }
-  };
+  }
 
   // Initial fetch (default values)
   useEffect(() => {
@@ -291,7 +306,7 @@ if (city && city.trim() !== '') {
         </button>
       </form>
       <div className="max-w-10xl mx-auto px-4 sm:px-6 lg:px-8 py-2">
-        {selectedCar ? (    
+        {selectedCar ? (
           <BookCarForm
             car={selectedCar}
             company={carCompanyData.find((company) => company.companyId === selectedCar.companyId)}

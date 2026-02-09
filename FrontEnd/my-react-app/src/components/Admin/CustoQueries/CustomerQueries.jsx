@@ -12,8 +12,8 @@ export default function CustomerQueries() {
   const [filterStatus, setFilterStatus] = useState("all")
   const [currentPage, setCurrentPage] = useState(1)
   const [itemsPerPage, setItemsPerPage] = useState(25)
-  const { showLoader , hideLoader} = useLoading();
-  const token=localStorage.getItem("token");
+  const { showLoader, hideLoader } = useLoading();
+  const token = localStorage.getItem("token");
 
   const [queries, setQueries] = useState([]);
 
@@ -45,7 +45,7 @@ export default function CustomerQueries() {
       } catch (err) {
         setQueries([]);
       } finally {
-         hideLoader();
+        hideLoader();
       }
     };
     fetchQueries();
@@ -62,14 +62,14 @@ export default function CustomerQueries() {
   const handleDeleteQuery = async (queryId) => {
     showLoader("Deleting query...")
     const response = await fetch(`http://localhost:9090/api/contact/${queryId}`, {
-          method: 'DELETE',
-           headers: {
-            "Authorization": `Bearer ${token}`,
-            "Content-Type": "application/json"
-          }  
-        });
-        if (!response.ok) throw new Error('Failed to send answer');
-        hideLoader();
+      method: 'DELETE',
+      headers: {
+        "Authorization": `Bearer ${token}`,
+        "Content-Type": "application/json"
+      }
+    });
+    if (!response.ok) throw new Error('Failed to send answer');
+    hideLoader();
   }
 
   const handleAnswered = (queryId, answer) => {
@@ -88,9 +88,9 @@ export default function CustomerQueries() {
   const totalPages = Math.ceil(filteredQueries.length / itemsPerPage)
   const startIndex = (currentPage - 1) * itemsPerPage
   const endIndex = startIndex + itemsPerPage
-  const currentQueries= filteredQueries.slice(startIndex, endIndex)
+  const currentQueries = filteredQueries.slice(startIndex, endIndex)
 
-  
+
 
   const handleItemsPerPageChange = (newItemsPerPage) => {
     setItemsPerPage(newItemsPerPage)
@@ -99,7 +99,7 @@ export default function CustomerQueries() {
 
   return (
     <div className="space-y-6">
-        <Navbar />
+      <Navbar />
       <div className="flex items-center justify-between mx-5">
         <h1 className="text-3xl font-bold text-gray-900">Customer Queries Management</h1>
         <div className="text-sm text-gray-500">Total Queries: {queries.length}</div>
@@ -115,33 +115,33 @@ export default function CustomerQueries() {
       />
 
       <ItemsPerPageSelector
-          itemsPerPage={itemsPerPage}
-          onItemsPerPageChange={handleItemsPerPageChange}
-        />
+        itemsPerPage={itemsPerPage}
+        onItemsPerPageChange={handleItemsPerPageChange}
+      />
 
-       {currentQueries.length === 0 ? (
-          <div className="text-center py-12 mx-5">
-            <div className="text-gray-500 text-lg">
-              {filteredQueries.length === 0 ? "No Queries found matching your criteria" : "Loading..."}
-            </div>
+      {currentQueries.length === 0 ? (
+        <div className="text-center py-12 mx-5">
+          <div className="text-gray-500 text-lg">
+            {filteredQueries.length === 0 ? "No Queries found matching your criteria" : "Loading..."}
           </div>
-        ) : (
-          <>
-            <div className="grid grid-cols-1 min-[890px]:grid-cols-2 min-[1090px]:grid-cols-3 min-[1410px]:grid-cols-4 gap-4 sm:gap-6 mx-5">
-              {currentQueries.map((query) => (
-                <QueryCard key={query.queryId} query={query} onDelete={handleDeleteQuery} onAnswered={handleAnswered} />
-              ))}
-            </div>
+        </div>
+      ) : (
+        <>
+          <div className="grid grid-cols-1 min-[890px]:grid-cols-2 min-[1090px]:grid-cols-3 min-[1410px]:grid-cols-4 gap-4 sm:gap-6 mx-5">
+            {currentQueries.map((query) => (
+              <QueryCard key={query.queryId} query={query} onDelete={handleDeleteQuery} onAnswered={handleAnswered} />
+            ))}
+          </div>
 
-            <Pagination
-              currentPage={currentPage}
-              totalPages={totalPages}
-              onPageChange={setCurrentPage}
-              totalItems={filteredQueries.length}
-              itemsPerPage={itemsPerPage}
-            />
-          </>
-        )}
-      </div>
+          <Pagination
+            currentPage={currentPage}
+            totalPages={totalPages}
+            onPageChange={setCurrentPage}
+            totalItems={filteredQueries.length}
+            itemsPerPage={itemsPerPage}
+          />
+        </>
+      )}
+    </div>
   )
 }

@@ -4,7 +4,7 @@ import com.RentalCompaniesService.Dto.*;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.web.bind.annotation.*;
 
-@FeignClient(name = "inventory-service")
+@FeignClient(name = "INVENTORY-SERVICE")
 public interface InventoryClient {
 
     @GetMapping("/api/inventory/car/{carId}/return")

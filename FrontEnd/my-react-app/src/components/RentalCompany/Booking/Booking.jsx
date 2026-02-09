@@ -18,12 +18,12 @@ export default function Bookings() {
 
   const token = localStorage.getItem("token");
   const email = localStorage.getItem("email");
-  
+
   useEffect(() => {
     const fetchBookings = async () => {
       showLoader("Loading bookings data...");
       try {
-        const resId = await fetch("http://localhost:8084/auth/user/email", {
+        const resId = await fetch("http://localhost:9090/auth/user/email", {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
@@ -40,7 +40,7 @@ export default function Bookings() {
         })
 
         const bookingData = await res.json()
-        
+
         // Enrich each booking with car and customer data
         const enrichedBookings = await Promise.all(
           bookingData.map(async (booking) => {
@@ -57,10 +57,10 @@ export default function Bookings() {
             const customer = await customerRes.json()
             return {
               ...booking,
-              totalAmount: booking.totalAmount*0.75,
+              totalAmount: booking.totalAmount * 0.75,
               customerName: customer.fullName,
               customerPhone: customer.phoneNumber,
-              customerEmail: customer.email, 
+              customerEmail: customer.email,
               carName: `${car.make} ${car.model}`,
             }
           })

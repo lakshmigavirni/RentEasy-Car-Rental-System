@@ -35,7 +35,7 @@ const Footer = () => {
                 </a>
               </div>
             </div>
-            
+
             <div>
               <h4 className="text-white text-lg font-semibold mb-4">Quick Links</h4>
               <ul className="space-y-2">
@@ -45,7 +45,7 @@ const Footer = () => {
                 <li><Link to="/contact-us" className="hover:text-blue-400 transition">Contact</Link></li>
               </ul>
             </div>
-            
+
             <div>
               <h4 className="text-white text-lg font-semibold mb-4">Support</h4>
               <ul className="space-y-2">
@@ -55,7 +55,7 @@ const Footer = () => {
                 <li><Link to="contact-us/#query-form" className="hover:text-blue-400 transition">Customer Support</Link></li>
               </ul>
             </div>
-            
+
             {/* <div>
               <h4 className="text-white text-lg font-semibold mb-4">Contact Us</h4>
               <address className="not-italic">
@@ -67,7 +67,7 @@ const Footer = () => {
               </address>
             </div> */}
           </div>
-          
+
           <div className="border-t border-gray-700 mt-12 pt-8 text-center">
             <p>&copy; {new Date().getFullYear()} RentEasy Car Rental. All rights reserved.</p>
           </div>

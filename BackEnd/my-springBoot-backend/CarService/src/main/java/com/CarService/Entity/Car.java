@@ -7,64 +7,70 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import java.time.LocalDateTime;
 import java.util.List;
 
+@Entity
+@Table(name = "Cars")
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
+public class Car {
 
-    @Entity
-    @Table(name = "Cars")
-    @Getter
-    @Setter
-    @NoArgsConstructor
-    @AllArgsConstructor
-    @Builder
-    public class Car {
+    @Id
+    @GeneratedValue(strategy = GenerationType.AUTO)
+    @Column(name = "id", updatable = false, nullable = false)
+    private int carId;
 
-        @Id
-        @GeneratedValue(strategy = GenerationType.AUTO)
-        @Column(name = "id", updatable = false, nullable = false)
-        private int carId;
+    @Column(name = "company_id", nullable = false)
+    private int companyId;
 
-        @Column(name = "company_id", nullable = false)
-        private int companyId;
+    @Column(name = "make", nullable = false, length = 100)
+    private String make;
 
-        @Column(name = "make", nullable = false, length = 100)
-        private String make;
+    @Column(name = "model", nullable = false, length = 100)
+    private String model;
 
-        @Column(name = "model", nullable = false, length = 100)
-        private String model;
+    @Column(name = "year", nullable = false)
+    private int year;
 
-        @Column(name = "year", nullable = false)
-        private int year;
+    @Column(name = "category", nullable = false, length = 50)
+    private String category;
 
-        @Column(name = "category", nullable = false, length = 50)
-        private String category;
+    @Column(name = "daily_rate", nullable = false)
+    private double dailyRate;
 
-        @Column(name = "daily_rate", nullable = false)
-        private double dailyRate;
+    @Column(name = "fuel_type", nullable = false)
+    private String fuelType;
 
-        @Column(name = "fuel_type", nullable = false)
-        private String fuelType;
+    @Column(name = "seating_capacity", nullable = false)
+    private int seatingCapacity;
 
-        @Column(name = "seating_capacity", nullable = false)
-        private int seatingCapacity;
+    @ElementCollection
+    @CollectionTable(name = "car_features", joinColumns = @JoinColumn(name = "car_id"))
+    @Column(name = "feature")
+    private List<String> features;
 
-        @ElementCollection
-        @CollectionTable(name = "car_features", joinColumns = @JoinColumn(name = "car_id"))
-        @Column(name = "feature")
-        private List<String> features;
+    @ElementCollection
+    @CollectionTable(name = "car_image_urls", joinColumns = @JoinColumn(name = "car_id"))
+    @Column(name = "image_url")
+    private List<String> imageUrls;
 
-        @ElementCollection
-        @CollectionTable(name = "car_image_urls", joinColumns = @JoinColumn(name = "car_id"))
-        @Column(name = "image_url")
-        private List<String> imageUrls;
+    @Column(name = "status", length = 50, nullable = false)
+    private String status = "PENDING";
 
-        @Column(name = "status", length = 50, nullable = false)
-        private String status = "PENDING";
+    @Column(name = "created_at", nullable = false, updatable = false)
+    private LocalDateTime createdAt = LocalDateTime.now();
 
-        @Column(name = "created_at", nullable = false, updatable = false)
-        private LocalDateTime createdAt = LocalDateTime.now();
+    @Column(name = "rcbook")
+    @JsonProperty("rcbook")
+    private String RCbook;
 
-        @Column(name = "rcbook")
-        @JsonProperty("rcbook")
-        private String RCbook;
-
-
+    public String getRCbook() {
+        return RCbook;
     }
+
+    public void setRCbook(String RCbook) {
+        this.RCbook = RCbook;
+    }
+
+}

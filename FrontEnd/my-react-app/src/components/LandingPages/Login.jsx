@@ -3,6 +3,7 @@ import { Eye, EyeOff, LogIn, Car, MapPin, Clock } from "lucide-react"
 import { Link, useNavigate } from "react-router-dom"
 import { motion, AnimatePresence } from "framer-motion"
 import { useLoading } from "../Loader/LoadingProvider"
+import url from "../URL"
 
 export default function LoginForm() {
   const [email, setEmail] = useState("")
@@ -11,7 +12,7 @@ export default function LoginForm() {
   const [Error, setError] = useState("")
   const [focusedField, setFocusedField] = useState("")
   const navigate = useNavigate()
-  const { showLoader, hideLoader ,isLoading} = useLoading()
+  const { showLoader, hideLoader, isLoading } = useLoading()
 
   const handleSubmit = async (e) => {
     e.preventDefault()
@@ -19,7 +20,7 @@ export default function LoginForm() {
     setError("")
 
     try {
-      const response = await fetch("http://localhost:8084/auth/login", {
+      const response = await fetch(`${url}/auth/login`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -38,6 +39,8 @@ export default function LoginForm() {
           navigate("/admin/dashboard", { replace: true });
         } else if (data.role === "RENTAL_COMPANY") {
           navigate("/dashboard", { replace: true });
+        } else if (data.role === "CUSTOMER") {
+          navigate("/customer-dashboard", { replace: true });
         } else {
           navigate("/", { replace: true });
         }
@@ -55,7 +58,7 @@ export default function LoginForm() {
 
   const containerVariants = {
     hidden: { opacity: 0, y: 50 },
-    visible: {	
+    visible: {
       opacity: 1,
       y: 0,
       transition: {
@@ -264,7 +267,7 @@ export default function LoginForm() {
 
               {/* Remember Me & Forgot Password */}
               <motion.div className="flex items-center justify-between" variants={itemVariants}>
-            
+
                 <motion.a
                   href="/forgot-password"
                   className="text-sm font-medium text-orange-600 hover:text-orange-500 transition-colors"
@@ -331,7 +334,7 @@ export default function LoginForm() {
 
               {/* Sign Up Link */}
               <motion.div className="text-center text-sm" variants={itemVariants}>
-                <span className="text-gray-600">New to DriveEasy?</span>{" "}
+                <span className="text-gray-600">New to RentEasy?</span>{" "}
                 <Link to="/register" className="font-medium text-orange-600 hover:text-orange-500 transition-colors">
                   <motion.span whileHover={{ x: 2 }} className="inline-block">
                     Start your journey →
@@ -341,7 +344,7 @@ export default function LoginForm() {
               <motion.div className="text-center text-sm" variants={itemVariants}>
                 <Link to="/" className="font-medium text-orange-600 hover:text-orange-500 transition-colors">
                   <motion.span whileHover={{ x: 2 }} className="inline-block">
-                    ← Go Back 
+                    ← Go Back
                   </motion.span>
                 </Link>
               </motion.div>

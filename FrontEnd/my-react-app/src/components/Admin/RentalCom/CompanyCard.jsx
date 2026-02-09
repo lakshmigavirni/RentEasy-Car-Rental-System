@@ -105,7 +105,7 @@ const CompanyCard = ({ company, onEdit, onDelete, onCarVerification }) => {
 
   const handleEditFormSubmit = (e) => {
     e.preventDefault();
-    
+
     // Find only changed fields
     const changedData = {};
     Object.keys(editFormData).forEach(key => {
@@ -120,7 +120,7 @@ const CompanyCard = ({ company, onEdit, onDelete, onCarVerification }) => {
         companyId: company.companyId,
         changes: changedData
       });
-      
+
       // Send updated data to parent
       onEdit(company.companyId, { ...editFormData });
     } else {
@@ -149,7 +149,7 @@ const CompanyCard = ({ company, onEdit, onDelete, onCarVerification }) => {
   };
 
   const handleVerification = async (carId, status, reason = '') => {
-   const curremail= localStorage.getItem("email");
+    const curremail = localStorage.getItem("email");
     const verificationData = {
       carId,
       verificationStatus: status,
@@ -190,7 +190,7 @@ const CompanyCard = ({ company, onEdit, onDelete, onCarVerification }) => {
             <div className="flex items-center space-x-2">
               <span className={`px-3 py-1 rounded-full text-xs font-semibold backdrop-blur-sm ${getStatusColor(company.status)} shadow-sm`}>
                 {company.status}
-              </span>    
+              </span>
             </div>
           </div>
         </div>
@@ -251,7 +251,7 @@ const CompanyCard = ({ company, onEdit, onDelete, onCarVerification }) => {
             <Car className="w-4 h-4" />
             <span>View Cars ({company.cars?.length || 0})</span>
           </button>
-          
+
           {/* Quick Action Buttons */}
           <div className="flex space-x-3">
             <button
@@ -297,7 +297,7 @@ const CompanyCard = ({ company, onEdit, onDelete, onCarVerification }) => {
                   {company.cars.map((car) => (
                     <div key={car.carId} className="bg-white border border-red-100 rounded-xl p-5 hover:shadow-xl transition-all duration-300 hover:transform hover:scale-105 relative overflow-hidden">
                       <div className="absolute -right-5 -top-5 w-10 h-10 bg-red-100 rounded-full opacity-50"></div>
-                      
+
                       {/* Verification Status Badge */}
                       <div className={`absolute top-3 left-3 px-2 py-1 rounded-full text-xs font-semibold flex items-center space-x-1 border ${getStatusColor(car.status)}`}>
                         {getStatusIcon(car.status)}
@@ -327,7 +327,7 @@ const CompanyCard = ({ company, onEdit, onDelete, onCarVerification }) => {
                         <h3 className="font-bold text-xl text-gray-800 leading-tight">
                           {car.make} {car.model}
                         </h3>
-                        
+
                         <div className="grid grid-cols-2 gap-3 text-sm">
                           <div className="flex items-center space-x-2">
                             <div className="w-6 h-6 bg-red-100 rounded-full flex items-center justify-center">
@@ -443,12 +443,12 @@ const CompanyCard = ({ company, onEdit, onDelete, onCarVerification }) => {
                   <h3 className="text-lg font-semibold text-gray-800 flex items-center space-x-2">
                     <Eye className="w-5 h-5 text-blue-600" />
                     <span>RC Book Document</span>
-                    
-                    
+
+
                   </h3>
                   <div className="bg-white border-2 border-gray-200 rounded-xl p-4 shadow-lg">
                     <img
-                    
+
                       src={selectedCar.rcbook}
                       alt="RC Book"
                       className="w-full h-64 object-cover rounded-lg shadow-md"
@@ -457,14 +457,14 @@ const CompanyCard = ({ company, onEdit, onDelete, onCarVerification }) => {
                       }}
                     />
                   </div>
-                  
+
                   {/* Document Info */}
                   <div className="bg-gray-50 rounded-lg p-4 space-y-2">
                     <div className="flex justify-between">
                       <span className="text-sm font-medium text-gray-600">Submitted:</span>
                       <span className="text-sm text-gray-800">
-                        {selectedCar.createdAt && !isNaN(new Date(selectedCar.createdAt)) 
-                          ? formatDate(selectedCar.createdAt) 
+                        {selectedCar.createdAt && !isNaN(new Date(selectedCar.createdAt))
+                          ? formatDate(selectedCar.createdAt)
                           : "Not Submitted"}
                       </span>
                     </div>
@@ -489,7 +489,7 @@ const CompanyCard = ({ company, onEdit, onDelete, onCarVerification }) => {
                     <Car className="w-5 h-5 text-blue-600" />
                     <span>Car Details</span>
                   </h3>
-                  
+
                   {/* Car Info */}
                   <div className="bg-white border border-gray-200 rounded-xl p-4 space-y-3 shadow-sm">
                     <div className="grid grid-cols-2 gap-4 text-sm">
@@ -534,14 +534,14 @@ const CompanyCard = ({ company, onEdit, onDelete, onCarVerification }) => {
                   {selectedCar && isPending && (
                     <div className="bg-white border border-gray-200 rounded-xl p-4 space-y-4 shadow-sm">
                       <h4 className="font-semibold text-gray-800">Admin Actions</h4>
-                      
+
                       <div className="flex space-x-3">
                         <button
                           onClick={async () => {
                             try {
                               // First approve the car
                               await handleVerification(selectedCar.carId, 'approved');
-                              
+
                               // Then update car status to available
                               const token = localStorage.getItem('token');
                               const response = await fetch(`http://localhost:9090/api/cars/${selectedCar.carId}/status`, {
@@ -552,9 +552,9 @@ const CompanyCard = ({ company, onEdit, onDelete, onCarVerification }) => {
                                 },
                                 body: JSON.stringify({ status: 'available' })
                               });
-                              
+
                               if (!response.ok) throw new Error('Failed to update car status');
-                              
+
                               alert('Car approved and status updated to available!');
                               setShowRCModal(false);
                               setSelectedCar(null);
@@ -568,13 +568,13 @@ const CompanyCard = ({ company, onEdit, onDelete, onCarVerification }) => {
                           <CheckCircle className="w-5 h-5" />
                           <span>Approve & Make Available</span>
                         </button>
-                        
+
                         <button
                           onClick={async () => {
                             try {
                               // First approve the car
                               await handleVerification(selectedCar.carId, 'reject');
-                              
+
                               // Then update car status to available
                               const token = localStorage.getItem('token');
                               const response = await fetch(`http://localhost:9090/api/cars/${selectedCar.carId}/status`, {
@@ -585,9 +585,9 @@ const CompanyCard = ({ company, onEdit, onDelete, onCarVerification }) => {
                                 },
                                 body: JSON.stringify({ status: 'reject' })
                               });
-                              
+
                               if (!response.ok) throw new Error('Failed to update car status');
-                              
+
                               alert('Car rejected and status updated to maintenence!');
                               setShowRCModal(false);
                               setSelectedCar(null);
@@ -602,7 +602,7 @@ const CompanyCard = ({ company, onEdit, onDelete, onCarVerification }) => {
                           <span>Reject</span>
                         </button>
                       </div>
-                      
+
                       <div className="text-xs text-gray-500 bg-blue-50 p-3 rounded-lg">
                         <p className="font-medium mb-1">Verification Guidelines:</p>
                         <ul className="list-disc list-inside space-y-1">

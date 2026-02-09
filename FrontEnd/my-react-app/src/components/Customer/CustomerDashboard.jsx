@@ -11,7 +11,7 @@ import {
   Star,
   MessageSquare,
   MessageSquareReply,
-  AlertTriangle ,
+  AlertTriangle,
   Clock,
   MapPin,
   Settings,
@@ -33,6 +33,7 @@ import {
 } from "lucide-react";
 import { useLoading } from "../Loader/LoadingProvider";
 import { uploadToCloudinary } from "../utils/uploadToCloudinary";
+import url from "../URL";
 
 const Dashboard = () => {
   const [activeTab, setActiveTab] = useState("bookings");
@@ -89,7 +90,7 @@ const Dashboard = () => {
   const token = localStorage.getItem("token");
   const email = localStorage.getItem("email");
 
-  const BASE_URL1 = "http://localhost:8084"; // Auth Service
+  const BASE_URL1 = "http://localhost:9090"; // Auth Service
   const BASE_URL2 = "http://localhost:9090"; // Customer/Booking Service
 
   const handleLogout = () => {
@@ -101,7 +102,7 @@ const Dashboard = () => {
     const fetchCustomerData = async () => {
       showLoader("loading...");
       try {
-        const resId = await fetch(`${BASE_URL1}/auth/user/email`, {
+        const resId = await fetch(`${url}/auth/user/email`, {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
@@ -110,38 +111,51 @@ const Dashboard = () => {
           body: JSON.stringify({ email }),
         });
 
+        if (!resId.ok) throw new Error("Failed to fetch user ID");
         const id = await resId.json();
         setCustomerId(id);
 
-        const resProfile = await fetch(`${BASE_URL2}/api/customers/${id}`, {
+        const resProfile = await fetch(`${url}/api/customers/${id}`, {
           headers: { Authorization: `Bearer ${token}` },
         });
+
+        if (!resProfile.ok) {
+          console.warn("Customer profile not found in CustomerService");
+          setLoading(false);
+          hideLoader();
+          return;
+        }
+
         const profileData = await resProfile.json();
         console.log(profileData);
-        localStorage.setItem("drivingLicenseStatus",profileData.drivingLicenseStatus)
+        localStorage.setItem("drivingLicenseStatus", profileData.drivingLicenseStatus)
         setName(profileData.fullName);
         setProfile(profileData);
 
         setEditProfile(profileData); // Sync edit fields
 
         const resBookings = await fetch(
-          `${BASE_URL2}/api/customers/${id}/booking`,
+          `${url}/api/customers/${id}/booking`,
           {
             headers: { Authorization: `Bearer ${token}` },
           }
         );
-        let bookingData = await resBookings.json();
-        for (const b of bookingData) {
-          if (b.status && b.status.toLowerCase() === "pending" && !isLessThanOneHourOld(b.createdAt)) {
-            await handleDeleteBooking(b.bookingId);
+
+        let bookingData = [];
+        if (resBookings.ok) {
+          bookingData = await resBookings.json();
+          for (const b of bookingData) {
+            if (b.status && b.status.toLowerCase() === "pending" && !isLessThanOneHourOld(b.createdAt)) {
+              await handleDeleteBooking(b.bookingId);
+            }
           }
+          // Filter out deleted bookings
+          bookingData = bookingData.filter(b => !(b.status && b.status.toLowerCase() === "pending" && !isLessThanOneHourOld(b.createdAt)));
         }
-        // Filter out deleted bookings
-        bookingData = bookingData.filter(b => !(b.status && b.status.toLowerCase() === "pending" && !isLessThanOneHourOld(b.createdAt)));
         setBookings(bookingData);
 
         const resComments = await fetch(
-          `${BASE_URL2}/api/reviews/customer/${id}`,
+          `${url}/api/reviews/customer/${id}`,
           {
             headers: { Authorization: `Bearer ${token}` },
           }
@@ -213,9 +227,8 @@ const Dashboard = () => {
     return Array.from({ length: 5 }, (_, index) => (
       <Star
         key={index}
-        className={`w-4 h-4 ${
-          index < rating ? "fill-amber-400 text-amber-400" : "text-gray-300"
-        }`}
+        className={`w-4 h-4 ${index < rating ? "fill-amber-400 text-amber-400" : "text-gray-300"
+          }`}
       />
     ));
   };
@@ -226,17 +239,15 @@ const Dashboard = () => {
         key={index}
         type="button"
         onClick={() => onRatingChange && onRatingChange(index + 1)}
-        className={`w-6 h-6 ${
-          onRatingChange ? "cursor-pointer" : ""
-        } transition-transform`}
+        className={`w-6 h-6 ${onRatingChange ? "cursor-pointer" : ""
+          } transition-transform`}
         disabled={!onRatingChange}
         whileHover={onRatingChange ? { scale: 1.1 } : {}}
         whileTap={onRatingChange ? { scale: 0.95 } : {}}
       >
         <Star
-          className={`w-6 h-6 ${
-            index < rating ? "fill-amber-400 text-amber-400" : "text-gray-300"
-          }`}
+          className={`w-6 h-6 ${index < rating ? "fill-amber-400 text-amber-400" : "text-gray-300"
+            }`}
         />
       </motion.button>
     ));
@@ -349,11 +360,11 @@ const Dashboard = () => {
           comments.map((comment) =>
             comment.carId === carId
               ? {
-                  ...comment,
-                  rating: payload.rating,
-                  comment: payload.comment,
-                  title: reviewForm.title,
-                }
+                ...comment,
+                rating: payload.rating,
+                comment: payload.comment,
+                title: reviewForm.title,
+              }
               : comment
           )
         );
@@ -403,7 +414,7 @@ const Dashboard = () => {
 
   const handleProfileSave = async () => {
     try {
-      const response = await fetch(`${BASE_URL2}/api/customers/${customerId}`, {
+      const response = await fetch(`${url}/api/customers/${customerId}`, {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
@@ -467,7 +478,7 @@ const Dashboard = () => {
       }
 
       const updatedCustomerResponse = await fetch(
-        `${BASE_URL2}/api/customers/${customerId}`,
+        `${url}/api/customers/${customerId}`,
         {
           method: "PUT",
           headers: {
@@ -516,8 +527,8 @@ const Dashboard = () => {
         customerEmail: email?.trim() || "unknown@example.com",
         description: "Payment for car rental booking",
       };
-  
-      const paymentResponse = await fetch("http://localhost:9090/api/payments/create-session", {
+
+      const paymentResponse = await fetch(`${url}/api/payments/create-session`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -525,11 +536,11 @@ const Dashboard = () => {
         },
         body: JSON.stringify(paymentPayload),
       });
-  
+
       if (!paymentResponse.ok) {
         throw new Error("Failed to initiate payment session");
       }
-  
+
       const paymentData = await paymentResponse.json();
       const redirectUrl = paymentData.checkoutUrl;
       window.location.href = redirectUrl;
@@ -539,12 +550,12 @@ const Dashboard = () => {
       console.error(error);
     }
   };
-  
+
   const handleDeleteBooking = async (bookingId) => {
     if (!window.confirm("Are you sure you want to delete this booking?")) return;
     try {
       showLoader("Deleting booking...");
-      const response = await fetch(`http://localhost:9090/api/bookings/${bookingId}`, {
+      const response = await fetch(`${url}/api/bookings/${bookingId}`, {
         method: "DELETE",
         headers: {
           Authorization: `Bearer ${token}`,
@@ -597,8 +608,8 @@ const Dashboard = () => {
     }
     try {
       console.log("11");
-      
-      const res = await fetch("http://localhost:9090/api/customers/dl/verify", {
+
+      const res = await fetch(`${url}/api/customers/dl/verify`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -615,12 +626,12 @@ const Dashboard = () => {
       console.log("22");
       const result = await res.json();
       console.log(result);
-      console.log(profile.fullName,profile.dateOfBirth);
+      console.log(profile.fullName, profile.dateOfBirth);
       console.log("33")
-      
+
       // Handle new response fields for match status
       if (result.status === "verified") {
-        await fetch(`${BASE_URL2}/api/customers/${customerId}/status`, {
+        await fetch(`${url}/api/customers/${customerId}/status`, {
           method: "PUT",
           headers: {
             "Content-Type": "application/json",
@@ -680,9 +691,9 @@ const Dashboard = () => {
   const averageRating =
     comments.length > 0
       ? (
-          comments.reduce((sum, comment) => sum + comment.rating, 0) /
-          comments.length
-        ).toFixed(1)
+        comments.reduce((sum, comment) => sum + comment.rating, 0) /
+        comments.length
+      ).toFixed(1)
       : 0;
 
   const isLessThanOneHourOld = (createdAt) => {
@@ -779,11 +790,10 @@ const Dashboard = () => {
                 <motion.button
                   key={tab.id}
                   onClick={() => setActiveTab(tab.id)}
-                  className={`flex items-center justify-center sm:justify-start space-x-2 px-6 py-3 rounded-xl font-medium text-sm transition-all duration-200 ${
-                    activeTab === tab.id
-                      ? "bg-gradient-to-r from-red-500 to-rose-500 text-white shadow-lg shadow-red-500/25"
-                      : "text-gray-600 hover:text-red-600 hover:bg-red-50"
-                  }`}
+                  className={`flex items-center justify-center sm:justify-start space-x-2 px-6 py-3 rounded-xl font-medium text-sm transition-all duration-200 ${activeTab === tab.id
+                    ? "bg-gradient-to-r from-red-500 to-rose-500 text-white shadow-lg shadow-red-500/25"
+                    : "text-gray-600 hover:text-red-600 hover:bg-red-50"
+                    }`}
                   whileHover={{ scale: 1.02 }}
                   whileTap={{ scale: 0.98 }}
                 >
@@ -965,7 +975,7 @@ const Dashboard = () => {
                               <span>Update Review</span>
                             </motion.button>
                           )}
-                          
+
                         </div>
                       </div>
                     </div>
@@ -1353,11 +1363,10 @@ const Dashboard = () => {
                           setIsEditingLicense(true);
                         }}
                         disabled={profile?.drivingLicenseStatus === "verified"}
-                        className={`flex items-center justify-center space-x-2 px-6 py-3 rounded-xl font-medium transition-all duration-200 border w-fit mx-auto sm:mx-0 ${
-                          profile?.drivingLicenseStatus === "verified"
-                            ? "bg-gray-100 text-gray-400 border-gray-200 cursor-not-allowed"
-                            : "bg-white/20 backdrop-blur-sm text-white hover:bg-white/30 border-white/30"
-                        }`}
+                        className={`flex items-center justify-center space-x-2 px-6 py-3 rounded-xl font-medium transition-all duration-200 border w-fit mx-auto sm:mx-0 ${profile?.drivingLicenseStatus === "verified"
+                          ? "bg-gray-100 text-gray-400 border-gray-200 cursor-not-allowed"
+                          : "bg-white/20 backdrop-blur-sm text-white hover:bg-white/30 border-white/30"
+                          }`}
                       >
                         <Edit3 className="h-5 w-5" />
                         <span className="font-medium">
@@ -1423,11 +1432,10 @@ const Dashboard = () => {
                             disabled={
                               profile?.drivingLicenseStatus === "verified"
                             }
-                            className={`w-full px-4 py-4 border-2 rounded-xl focus:ring-2 focus:border-red-500 transition-all duration-200 shadow-sm ${
-                              profile?.drivingLicenseStatus === "verified"
-                                ? "border-gray-200 bg-gray-100 text-gray-500 cursor-not-allowed"
-                                : "border-gray-200 bg-white focus:ring-red-500"
-                            }`}
+                            className={`w-full px-4 py-4 border-2 rounded-xl focus:ring-2 focus:border-red-500 transition-all duration-200 shadow-sm ${profile?.drivingLicenseStatus === "verified"
+                              ? "border-gray-200 bg-gray-100 text-gray-500 cursor-not-allowed"
+                              : "border-gray-200 bg-white focus:ring-red-500"
+                              }`}
                             placeholder={
                               profile?.drivingLicenseStatus === "verified"
                                 ? "Cannot be changed"
@@ -1446,23 +1454,21 @@ const Dashboard = () => {
                         initial={{ opacity: 0, x: -20 }}
                         animate={{ opacity: 1, x: 0 }}
                         transition={{ delay: 0.2 }}
-                        className={`rounded-xl p-4 ${
-                          profile?.drivingLicenseStatus === "verified"
-                            ? "bg-gradient-to-r from-green-50 to-emerald-50 border border-green-200"
-                            : profile?.drivingLicenseStatus === "Rejected"
+                        className={`rounded-xl p-4 ${profile?.drivingLicenseStatus === "verified"
+                          ? "bg-gradient-to-r from-green-50 to-emerald-50 border border-green-200"
+                          : profile?.drivingLicenseStatus === "Rejected"
                             ? "bg-gradient-to-r from-red-50 to-rose-50 border border-red-200"
                             : "bg-gradient-to-r from-amber-50 to-yellow-50 border border-amber-200"
-                        }`}
+                          }`}
                       >
                         <div className="flex items-center space-x-3">
                           <div
-                            className={`w-10 h-10 rounded-lg flex items-center justify-center ${
-                              profile?.drivingLicenseStatus === "verified"
-                                ? "bg-green-500"
-                                : profile?.drivingLicenseStatus === "Rejected"
+                            className={`w-10 h-10 rounded-lg flex items-center justify-center ${profile?.drivingLicenseStatus === "verified"
+                              ? "bg-green-500"
+                              : profile?.drivingLicenseStatus === "Rejected"
                                 ? "bg-red-500"
                                 : "bg-amber-500"
-                            }`}
+                              }`}
                           >
                             {profile?.drivingLicenseStatus === "verified" ? (
                               <CheckCircle className="w-5 h-5 text-white" />
@@ -1477,19 +1483,18 @@ const Dashboard = () => {
                               License Status
                             </h3>
                             <p
-                              className={`text-sm ${
-                                profile?.drivingLicenseStatus === "verified"
-                                  ? "text-green-700"
-                                  : profile?.drivingLicenseStatus === "Rejected"
+                              className={`text-sm ${profile?.drivingLicenseStatus === "verified"
+                                ? "text-green-700"
+                                : profile?.drivingLicenseStatus === "Rejected"
                                   ? "text-red-700"
                                   : "text-amber-700"
-                              }`}
+                                }`}
                             >
                               {profile?.drivingLicenseStatus === "verified"
                                 ? "Verified"
                                 : profile?.drivingLicenseStatus === "Rejected"
-                                ? "Rejected"
-                                : "Pending Verification"}
+                                  ? "Rejected"
+                                  : "Pending Verification"}
                             </p>
                             {profile?.drivingLicenseStatus === "Rejected" && (
                               <p className="text-xs text-red-600 mt-1">
@@ -1538,38 +1543,34 @@ const Dashboard = () => {
                       {(!profile?.drivingLicenseImg || isEditingLicense) && (
                         <label
                           htmlFor="license-upload"
-                          className={`w-full max-w-md border-2 border-dashed rounded-xl p-6 flex flex-col items-center justify-center transition-all duration-200 ${
-                            profile?.drivingLicenseStatus === "verified"
-                              ? "bg-gray-100 border-gray-300 cursor-not-allowed"
-                              : "bg-gray-50 border-gray-200 cursor-pointer hover:border-red-400 hover:bg-red-50"
-                          }`}
+                          className={`w-full max-w-md border-2 border-dashed rounded-xl p-6 flex flex-col items-center justify-center transition-all duration-200 ${profile?.drivingLicenseStatus === "verified"
+                            ? "bg-gray-100 border-gray-300 cursor-not-allowed"
+                            : "bg-gray-50 border-gray-200 cursor-pointer hover:border-red-400 hover:bg-red-50"
+                            }`}
                         >
                           <UploadCloud
-                            className={`w-12 h-12 mb-3 ${
-                              profile?.drivingLicenseStatus === "verified"
-                                ? "text-gray-400"
-                                : "text-gray-400"
-                            }`}
+                            className={`w-12 h-12 mb-3 ${profile?.drivingLicenseStatus === "verified"
+                              ? "text-gray-400"
+                              : "text-gray-400"
+                              }`}
                           />
                           <span
-                            className={`font-semibold text-center ${
-                              profile?.drivingLicenseStatus === "verified"
-                                ? "text-gray-500"
-                                : "text-gray-700"
-                            }`}
+                            className={`font-semibold text-center ${profile?.drivingLicenseStatus === "verified"
+                              ? "text-gray-500"
+                              : "text-gray-700"
+                              }`}
                           >
                             {profile?.drivingLicenseStatus === "verified"
                               ? "License Image Verified"
                               : profile?.drivingLicenseImg
-                              ? "Update Driving License Image"
-                              : "Upload Driving License Image"}
+                                ? "Update Driving License Image"
+                                : "Upload Driving License Image"}
                           </span>
                           <p
-                            className={`text-sm text-center mt-1 ${
-                              profile?.drivingLicenseStatus === "verified"
-                                ? "text-gray-400"
-                                : "text-gray-500"
-                            }`}
+                            className={`text-sm text-center mt-1 ${profile?.drivingLicenseStatus === "verified"
+                              ? "text-gray-400"
+                              : "text-gray-500"
+                              }`}
                           >
                             {profile?.drivingLicenseStatus === "verified"
                               ? "Cannot be changed"
@@ -1716,14 +1717,13 @@ const Dashboard = () => {
                       <div className="flex items-start space-x-4">
                         <div className="flex-shrink-0 border border-gray-200 rounded-xl">
                           <img
-                            src={ 
+                            src={
                               comment.carDto?.imageUrls?.[0] ||
                               comment.carDto?.imageUrl ||
                               "/placeholder.svg"
                             }
-                            alt={`${comment.carDto?.make || ""} ${
-                              comment.carDto?.model || ""
-                            }`}
+                            alt={`${comment.carDto?.make || ""} ${comment.carDto?.model || ""
+                              }`}
                             className="w-20 h-16 object-contain rounded-xl"
                             onError={(e) => {
                               e.target.src =
@@ -2040,12 +2040,11 @@ const Dashboard = () => {
                                 <img
                                   src={
                                     selectedBookingForDetails.car.imageUrls[
-                                      currentImageIndex
+                                    currentImageIndex
                                     ]
                                   }
-                                  alt={`${selectedBookingForDetails.car.make} ${
-                                    selectedBookingForDetails.car.model
-                                  } - Image ${currentImageIndex + 1}`}
+                                  alt={`${selectedBookingForDetails.car.make} ${selectedBookingForDetails.car.model
+                                    } - Image ${currentImageIndex + 1}`}
                                   className="w-full h-full object-contain"
                                   onError={(e) => {
                                     e.target.src =
@@ -2056,45 +2055,45 @@ const Dashboard = () => {
                                 {/* Navigation Arrows */}
                                 {selectedBookingForDetails.car.imageUrls
                                   .length > 1 && (
-                                  <>
-                                    <button
-                                      onClick={prevImage}
-                                      className="absolute left-4 top-1/2 transform -translate-y-1/2 bg-black/50 hover:bg-black/70 text-white p-2 rounded-full transition-all duration-200"
-                                    >
-                                      <svg
-                                        className="w-5 h-5"
-                                        fill="none"
-                                        stroke="currentColor"
-                                        viewBox="0 0 24 24"
+                                    <>
+                                      <button
+                                        onClick={prevImage}
+                                        className="absolute left-4 top-1/2 transform -translate-y-1/2 bg-black/50 hover:bg-black/70 text-white p-2 rounded-full transition-all duration-200"
                                       >
-                                        <path
-                                          strokeLinecap="round"
-                                          strokeLinejoin="round"
-                                          strokeWidth={2}
-                                          d="M15 19l-7-7 7-7"
-                                        />
-                                      </svg>
-                                    </button>
-                                    <button
-                                      onClick={nextImage}
-                                      className="absolute right-4 top-1/2 transform -translate-y-1/2 bg-black/50 hover:bg-black/70 text-white p-2 rounded-full transition-all duration-200"
-                                    >
-                                      <svg
-                                        className="w-5 h-5"
-                                        fill="none"
-                                        stroke="currentColor"
-                                        viewBox="0 0 24 24"
+                                        <svg
+                                          className="w-5 h-5"
+                                          fill="none"
+                                          stroke="currentColor"
+                                          viewBox="0 0 24 24"
+                                        >
+                                          <path
+                                            strokeLinecap="round"
+                                            strokeLinejoin="round"
+                                            strokeWidth={2}
+                                            d="M15 19l-7-7 7-7"
+                                          />
+                                        </svg>
+                                      </button>
+                                      <button
+                                        onClick={nextImage}
+                                        className="absolute right-4 top-1/2 transform -translate-y-1/2 bg-black/50 hover:bg-black/70 text-white p-2 rounded-full transition-all duration-200"
                                       >
-                                        <path
-                                          strokeLinecap="round"
-                                          strokeLinejoin="round"
-                                          strokeWidth={2}
-                                          d="M9 5l7 7-7 7"
-                                        />
-                                      </svg>
-                                    </button>
-                                  </>
-                                )}
+                                        <svg
+                                          className="w-5 h-5"
+                                          fill="none"
+                                          stroke="currentColor"
+                                          viewBox="0 0 24 24"
+                                        >
+                                          <path
+                                            strokeLinecap="round"
+                                            strokeLinejoin="round"
+                                            strokeWidth={2}
+                                            d="M9 5l7 7-7 7"
+                                          />
+                                        </svg>
+                                      </button>
+                                    </>
+                                  )}
 
                                 {/* Image Counter */}
                                 <div className="absolute bottom-4 right-4 bg-black/50 text-white px-3 py-1 rounded-full text-sm">
@@ -2109,34 +2108,33 @@ const Dashboard = () => {
                               {/* Thumbnail Navigation */}
                               {selectedBookingForDetails.car.imageUrls.length >
                                 1 && (
-                                <div className="mt-4 flex space-x-2 overflow-x-auto">
-                                  {selectedBookingForDetails.car.imageUrls.map(
-                                    (imageUrl, index) => (
-                                      <button
-                                        key={index}
-                                        onClick={() =>
-                                          setCurrentImageIndex(index)
-                                        }
-                                        className={`flex-shrink-0 w-16 h-12 rounded-lg overflow-hidden border-2 transition-all duration-200 ${
-                                          index === currentImageIndex
+                                  <div className="mt-4 flex space-x-2 overflow-x-auto">
+                                    {selectedBookingForDetails.car.imageUrls.map(
+                                      (imageUrl, index) => (
+                                        <button
+                                          key={index}
+                                          onClick={() =>
+                                            setCurrentImageIndex(index)
+                                          }
+                                          className={`flex-shrink-0 w-16 h-12 rounded-lg overflow-hidden border-2 transition-all duration-200 ${index === currentImageIndex
                                             ? "border-blue-500 shadow-lg"
                                             : "border-gray-200 hover:border-gray-300"
-                                        }`}
-                                      >
-                                        <img
-                                          src={imageUrl}
-                                          alt={`Thumbnail ${index + 1}`}
-                                          className="w-full h-full object-cover"
-                                          onError={(e) => {
-                                            e.target.src =
-                                              "https://images.unsplash.com/photo-1549924231-f129b911e442?w=400&h=300&fit=crop";
-                                          }}
-                                        />
-                                      </button>
-                                    )
-                                  )}
-                                </div>
-                              )}
+                                            }`}
+                                        >
+                                          <img
+                                            src={imageUrl}
+                                            alt={`Thumbnail ${index + 1}`}
+                                            className="w-full h-full object-cover"
+                                            onError={(e) => {
+                                              e.target.src =
+                                                "https://images.unsplash.com/photo-1549924231-f129b911e442?w=400&h=300&fit=crop";
+                                            }}
+                                          />
+                                        </button>
+                                      )
+                                    )}
+                                  </div>
+                                )}
                             </div>
                           </div>
                         )}

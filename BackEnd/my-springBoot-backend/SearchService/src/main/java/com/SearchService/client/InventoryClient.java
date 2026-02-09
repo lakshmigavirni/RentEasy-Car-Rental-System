@@ -7,7 +7,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 
-@FeignClient(name = "inventory-service")
+@FeignClient(name = "INVENTORY-SERVICE")
 public interface InventoryClient {
     @PostMapping("/api/inventory/car/{carId}/check-availability")
     Boolean checkAvailability(@PathVariable("carId") Integer carId,

@@ -88,7 +88,7 @@ const RegisterOTP = () => {
     setError("");
 
     try {
-      const response = await fetch("http://localhost:8084/auth/register/verify", {
+      const response = await fetch("http://localhost:9090/auth/register/verify", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -128,7 +128,7 @@ const RegisterOTP = () => {
     setError("");
 
     try {
-      await fetch("http://localhost:8084/auth/register/resend-otp", {
+      await fetch("http://localhost:9090/auth/register/resend-otp", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -270,7 +270,7 @@ const RegisterOTP = () => {
           </div>
         </div>
 
-        
+
       </div>
     </div>
   );

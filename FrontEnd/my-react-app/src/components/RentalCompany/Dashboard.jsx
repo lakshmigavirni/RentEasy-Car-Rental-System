@@ -5,6 +5,7 @@ import { Car, Calendar, Star, CreditCard, TrendingUp, Users, BarChart3, Activity
 import Navbar from "./Navbar"
 import Footer from "../LandingPages/Footer"
 import { useLoading } from "../Loader/LoadingProvider"
+import url from "../URL"
 
 export default function Dashboard() {
   const [stats, setStats] = useState([])
@@ -16,7 +17,7 @@ export default function Dashboard() {
     const fetchStats = async () => {
       showLoader("Loading dashboard data...")
       try {
-        const resId = await fetch("http://localhost:8084/auth/user/email", {
+        const resId = await fetch(`${url}/auth/user/email`, {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
@@ -27,7 +28,7 @@ export default function Dashboard() {
 
         const id = await resId.json()
 
-        const res = await fetch(`http://localhost:9090/api/reviews/companyId/${id}`, {
+        const res = await fetch(`${url}/api/reviews/companyId/${id}`, {
           headers: {
             Authorization: `Bearer ${token}`,
           },
@@ -38,12 +39,12 @@ export default function Dashboard() {
         const enrichedReviews = await Promise.all(
           reviewsData.map(async (review) => {
             const [carRes, customerRes] = await Promise.all([
-              fetch(`http://localhost:9090/api/cars/${review.carId}`, {
+              fetch(`${url}/api/cars/${review.carId}`, {
                 headers: {
                   Authorization: `Bearer ${token}`,
                 },
               }).then((res) => res.json()),
-              fetch(`http://localhost:9090/api/customers/${review.customerId}`, {
+              fetch(`${url}/api/customers/${review.customerId}`, {
                 headers: {
                   Authorization: `Bearer ${token}`,
                 },
@@ -66,7 +67,7 @@ export default function Dashboard() {
             ? reviewsData.reduce((sum, reviewsData) => sum + reviewsData.rating, 0) / reviewsData.length
             : 0
 
-        const paymentsRes = await fetch(`http://localhost:9090/api/payments/company/${id}`, {
+        const paymentsRes = await fetch(`${url}/api/payments/company/${id}`, {
           method: "GET",
           headers: {
             "Content-Type": "application/json",
@@ -79,7 +80,7 @@ export default function Dashboard() {
           .reduce((sum, payment) => sum + Number(payment.amount), 0);
 
         const [carsRes, bookingsRes, reviewsRes, ratingRes, customersRes] = await Promise.all([
-          fetch(`http://localhost:9090/api/cars/total/companyId/${id}`, {
+          fetch(`${url}/api/cars/total/companyId/${id}`, {
             method: "GET",
             headers: {
               "Content-Type": "application/json",
@@ -87,7 +88,7 @@ export default function Dashboard() {
             },
           }).then((res) => (res.ok ? res.json() : Promise.reject("Total Cars fetch failed"))),
 
-          fetch("http://localhost:9090/api/cars/count/status/booked", {
+          fetch(`${url}/api/cars/count/status/booked`, {
             method: "GET",
             headers: {
               "Content-Type": "application/json",
@@ -99,7 +100,7 @@ export default function Dashboard() {
 
           averageRating,
 
-          fetch(`http://localhost:9090/api/bookings/companyId/${id}/bookingCustomers`, {
+          fetch(`${url}/api/bookings/companyId/${id}/bookingCustomers`, {
             method: "GET",
             headers: {
               "Content-Type": "application/json",

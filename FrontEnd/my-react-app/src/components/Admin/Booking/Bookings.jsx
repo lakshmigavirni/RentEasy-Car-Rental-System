@@ -50,7 +50,7 @@ export default function Bookings() {
 
             return {
               ...booking,
-              commission:booking.totalAmount*0.25 ,
+              commission: booking.totalAmount * 0.25,
               customerName: customer.fullName,
               customerPhone: customer.phoneNumber,
               customerEmail: customer.email || `user${customer.customerId}@example.com`,
@@ -133,7 +133,7 @@ export default function Bookings() {
         <>
           <div className="grid grid-cols-1 min-[890px]:grid-cols-2 min-[1090px]:grid-cols-3 min-[1410px]:grid-cols-4 gap-4 sm:gap-6 mx-5">
             {currentBookings.map((booking) => (
-              <BookingCard key={`${booking.id}-${booking.customerEmail}`} booking={booking} />  
+              <BookingCard key={`${booking.id}-${booking.customerEmail}`} booking={booking} />
             ))}
           </div>
 

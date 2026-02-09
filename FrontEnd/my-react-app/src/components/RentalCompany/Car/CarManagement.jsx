@@ -9,6 +9,7 @@ import Pagination from "../Booking/Pagination";
 import { useLoading } from "../../Loader/LoadingProvider";
 import EditCarModal from "./EditCarModal";
 import DeleteCarModal from "./DeleteCarModal";
+import url from "../../URL";
 
 export default function CarManagement() {
   const [showAddForm, setShowAddForm] = useState(false);
@@ -33,7 +34,9 @@ export default function CarManagement() {
 
     showLoader("Loading car data...");
     try {
-      const resId = await fetch("http://localhost:8084/auth/user/email", {
+      // 1. Get User ID
+      console.log("Fetching user ID for email:", email);
+      const resId = await fetch(`${url}/auth/user/email`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -42,8 +45,39 @@ export default function CarManagement() {
         body: JSON.stringify({ email }),
       });
 
-      const id = await resId.json();
-      const response = await fetch(`http://localhost:9090/api/cars/companyid/${id}`, {
+      if (!resId.ok) throw new Error("Failed to fetch user ID");
+      const userId = await resId.json();
+      console.log("Found User ID:", userId);
+
+      // 2. Get All Rental Companies to find the one matching this User ID
+      console.log("Fetching all rental companies...");
+      const companiesResponse = await fetch(`${url}/api/rental-company`, {
+        method: "GET",
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      if (!companiesResponse.ok) throw new Error("Failed to fetch rental companies");
+      const companies = await companiesResponse.json();
+      console.log(`Found ${companies.length} total companies.`);
+
+      // 3. Find the company for this user
+      const userCompany = companies.find(
+        (company) => String(company.userId) === String(userId)
+      );
+
+      if (!userCompany) {
+        console.warn("No rental company found associated with this user ID:", userId);
+        setCars([]); // No company means no cars
+        return;
+      }
+
+      const companyId = userCompany.companyId;
+      console.log("Found Company ID for user:", companyId, "Company Name:", userCompany.companyName);
+
+      // 4. Fetch cars using the correct Company ID
+      const response = await fetch(`${url}/api/cars/companyid/${companyId}`, {
         method: "GET",
         headers: {
           "Content-Type": "application/json",
@@ -56,11 +90,12 @@ export default function CarManagement() {
       }
 
       const data = await response.json();
-      console.log(data);
-      
+      console.log("Cars data:", data);
+
       setCars(data);
     } catch (error) {
       console.error("Error fetching cars:", error);
+      // Optional: set an error state here to show to the user
     } finally {
       setLoading(false);
       hideLoader();

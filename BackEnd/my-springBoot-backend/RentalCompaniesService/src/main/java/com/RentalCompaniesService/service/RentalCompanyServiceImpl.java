@@ -144,6 +144,11 @@ return AllReviews;
     }
 
     @Override
+    public RentalCompany getRentalCompanyByEmail(String email) {
+        return rentalCompanyRepository.findByEmail(email);
+    }
+
+    @Override
     public Long getCountOfComaponies() {
         return rentalCompanyRepository.count();
     }

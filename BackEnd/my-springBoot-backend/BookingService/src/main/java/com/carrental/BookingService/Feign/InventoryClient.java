@@ -5,7 +5,7 @@ import com.carrental.BookingService.Entity.Inventory;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.web.bind.annotation.*;
 
-@FeignClient(name = "inventory-service")
+@FeignClient(name = "INVENTORY-SERVICE")
 public interface InventoryClient {
 
     @PostMapping("/api/inventory/car/{carId}/status")

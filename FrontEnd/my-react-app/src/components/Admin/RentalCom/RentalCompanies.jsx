@@ -144,11 +144,11 @@ export default function RentalCompanies() {
         cars: company.cars.map((car) =>
           car.carId === verificationData.carId
             ? {
-                ...car,
-                verificationStatus: verificationData.verificationStatus,
-                verifiedAt: verificationData.verifiedAt,
-                verifiedBy: verificationData.verifiedBy,
-              }
+              ...car,
+              verificationStatus: verificationData.verificationStatus,
+              verifiedAt: verificationData.verifiedAt,
+              verifiedBy: verificationData.verifiedBy,
+            }
             : car
         ),
       }))
@@ -156,10 +156,9 @@ export default function RentalCompanies() {
 
     // Show success message
     alert(
-      `Car ${
-        verificationData.verificationStatus === "approved"
-          ? "approved"
-          : "rejected"
+      `Car ${verificationData.verificationStatus === "approved"
+        ? "approved"
+        : "rejected"
       } successfully!`
     );
   };

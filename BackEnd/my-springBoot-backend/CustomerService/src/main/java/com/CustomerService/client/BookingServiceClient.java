@@ -11,7 +11,7 @@ import org.springframework.web.bind.annotation.DeleteMapping;
 
 import java.util.List;
 
-@FeignClient(name = "booking-service")
+@FeignClient(name = "BOOKING-SERVICE")
 public interface BookingServiceClient {
 
     @PostMapping("/api/bookings")

@@ -5,6 +5,7 @@ import ReviewCard from "./ReviewCard"
 import Navbar from "../Navbar"
 import ItemsPerPageSelector from "../Booking/ItemsPerPageSelector"
 import Pagination from "../Booking/Pagination"
+import url from "../../URL"
 
 export default function Reviews() {
   const [reviews, setReviews] = useState([])
@@ -21,49 +22,50 @@ export default function Reviews() {
         const token = localStorage.getItem("token")
         const email = localStorage.getItem("email")
 
-        const resId = await fetch("http://localhost:8084/auth/user/email", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
-          body: JSON.stringify({ email }),
-        })
-
-        const id = await resId.json()
-
-        const res = await fetch(`http://localhost:9090/api/reviews/companyId/${id}`, {
+        const companyRes = await fetch(`${url}/api/rental-company/email/${email}`, {
+          method: "GET",
           headers: {
             Authorization: `Bearer ${token}`,
           },
+        });
+
+        if (!companyRes.ok) throw new Error("Failed to fetch company details");
+        const companyData = await companyRes.json();
+        const id = companyData.companyId;
+
+        const res = await fetch(`${url}/api/reviews/companyId/${id}`, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
         })
 
-        const reviewsData = await res.json()
+        const reviewsDataRaw = await res.json()
+        const reviewsData = Array.isArray(reviewsDataRaw) ? reviewsDataRaw : []
         console.log(reviewsData);
-        
+
 
         const enrichedReviews = await Promise.all(
           reviewsData.map(async (review) => {
             const [carRes, customerRes] = await Promise.all([
-              fetch(`http://localhost:9090/api/cars/${review.carId}`, {
+              fetch(`${url}/api/cars/${review.carId}`, {
                 headers: {
                   Authorization: `Bearer ${token}`,
                 },
               }).then((res) => res.json()),
-              
-              fetch(`http://localhost:9090/api/customers/${review.customerId}`, {
+
+              fetch(`${url}/api/customers/${review.customerId}`, {
                 headers: {
                   Authorization: `Bearer ${token}`,
                 },
               }).then((res) => res.json()),
-            ])            
+            ])
             return {
               id: review.reviewId,
               customerName: customerRes.fullName,
               carName: `${carRes.make} ${carRes.model}`,
               rating: review.rating,
               comment: review.comment,
-              reply:review.reply,
+              reply: review.reply,
               reportReason: review.report?.reason,
               reportMessage: review.report?.additionalDetails,
               date: new Date(review.createdAt).toISOString().split("T")[0],
@@ -91,7 +93,7 @@ export default function Reviews() {
     { value: "1", label: "1 Star" },
   ]
 
-  const filteredReviews = reviews.filter((review) => {
+  const filteredReviews = Array.isArray(reviews) ? reviews.filter((review) => {
     const matchesSearch =
       review.customerName.toLowerCase().includes(searchTerm.toLowerCase()) ||
       review.carName.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -100,7 +102,7 @@ export default function Reviews() {
     const matchesFilter = filterRating === "all" || review.rating.toString() === filterRating
 
     return matchesSearch && matchesFilter
-  })
+  }) : []
 
   const totalPages = Math.ceil(filteredReviews.length / itemsPerPage)
   const startIndex = (currentPage - 1) * itemsPerPage
@@ -117,7 +119,7 @@ export default function Reviews() {
       ? reviews.reduce((sum, review) => sum + review.rating, 0) / reviews.length
       : 0
 
-       
+
 
   return (
     <div className="space-y-6">

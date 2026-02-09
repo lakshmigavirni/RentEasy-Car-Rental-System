@@ -22,10 +22,12 @@ import {
 import { useNavigate } from "react-router-dom";
 import L from "leaflet";
 import { Link } from "react-router-dom";
+import url from "../URL";
 
 const Register = () => {
   const [role, setRole] = useState("customer");
   const navigate = useNavigate();
+
 
   const [formData, setFormData] = useState({
     // Common fields
@@ -38,7 +40,7 @@ const Register = () => {
     dateOfBirth: "",
 
     // Customer specific fields
-    
+
     drivingLicenseStatus: "PENDING",
 
     // Manager specific fields
@@ -116,24 +118,22 @@ const Register = () => {
       const fields =
         role === "customer"
           ? [
-              "firstName",
-              "lastName",
-              "email",
-              "phoneNumber",
-              "password",
-              "confirmPassword",
-            ]
+            "firstName",
+            "lastName",
+            "email",
+            "phoneNumber",
+            "password",
+            "confirmPassword",
+          ]
           : [
-              "firstName",
-              "lastName",
-              "email",
-              "phoneNumber",
-              "password",
-              "confirmPassword",
-              "companyName",
-              "address",
-              "city",
-            ];
+            "firstName",
+            "lastName",
+            "email",
+            "phoneNumber",
+            "password",
+            "confirmPassword",
+          ]; // Admin fields (same as customer initially but simpler)
+
 
       const filledFields = fields.filter(
         (field) => formData[field].trim() !== ""
@@ -335,140 +335,129 @@ const Register = () => {
         newErrors.companyName = "Company name is required";
       if (!formData.address.trim()) newErrors.address = "Address is required";
       if (!formData.city.trim()) newErrors.city = "City is required";
-      if (!formData.latitude || !formData.longitude)
-        newErrors.location = "Location is required";
+      // if (!formData.latitude || !formData.longitude)
+      //   newErrors.location = "Location is required";
     }
 
     return newErrors;
   };
 
-  const handleNextStep = () => {
+  const handleNextStep = async () => {
     const validationErrors = validate(currentStep);
     if (Object.keys(validationErrors).length > 0) {
       setErrors(validationErrors);
       return;
     }
 
-    if (currentStep < (role === "customer" ? 2 : 3)) {
+    const maxSteps = role === "customer" ? 2 : role === "manager" ? 3 : 2;
+
+    if (currentStep < maxSteps) {
       setCurrentStep(currentStep + 1);
+      setErrors({});
     } else {
-      handleSubmit();
-    }
-  };
+      showLoader("Registering your account...");
+      setApiError(null);
 
-  const handlePrevStep = () => {
-    if (currentStep > 1) {
-      setCurrentStep(currentStep - 1);
-    }
-  };
-  const handleSubmit = async () => {
-    const validationErrors = validate();
-    if (Object.keys(validationErrors).length > 0) {
-      setErrors(validationErrors);
-      return;
-    }
-
-    showLoader("We will Registering...");
-    setApiError(null);
-
-    // Prepare payload
-    const payload = {
-      user: {
-        name: `${formData.firstName} ${formData.lastName}`,
-        email: formData.email,
-        password: formData.password,
-        role: role === "manager" ? "RENTAL_COMPANY" : "CUSTOMER",
-      },
-    };
-
-    if (role === "customer") {
-      payload.customer = {
-        fullName: `${formData.firstName} ${formData.lastName}`,
-        address: formData.address,
-        phoneNumber: formData.phoneNumber,
-        drivingLicenseStatus: formData.drivingLicenseStatus,
-        dateOfBirth: formData.dateOfBirth,
+      // Prepare payload
+      const payload = {
+        user: {
+          name: `${formData.firstName} ${formData.lastName}`,
+          email: formData.email,
+          password: formData.password,
+          role: role === "manager" ? "RENTAL_COMPANY" : role === "admin" ? "ADMIN" : "CUSTOMER",
+        },
       };
-    } else if (role === "manager") {
-      payload.rentalCompany = {
-        companyName: formData.companyName,
-        address: formData.address,
-        city: formData.city,
-        latitude: parseFloat(formData.latitude),
-        longitude: parseFloat(formData.longitude),
-        phoneNumber: formData.phoneNumber,
-      };
-    }
 
-    console.log("Payload being sent:", payload);
-
-    try {
-      const response = await fetch(
-        "http://localhost:8084/auth/register/initiate",
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(payload),
-        }
-      );
-
-      const contentType = response.headers.get("content-type");
-      let data;
-
-      if (contentType && contentType.includes("application/json")) {
-        data = await response.json();
-      } else {
-        data = await response.text();
+      if (role === "customer") {
+        payload.customer = {
+          fullName: `${formData.firstName} ${formData.lastName}`,
+          address: formData.address,
+          phoneNumber: formData.phoneNumber,
+          drivingLicenseStatus: formData.drivingLicenseStatus,
+          dateOfBirth: formData.dateOfBirth,
+        };
+      } else if (role === "manager") {
+        payload.rentalCompany = {
+          companyName: formData.companyName,
+          address: formData.address,
+          city: formData.city,
+          latitude: parseFloat(formData.latitude),
+          longitude: parseFloat(formData.longitude),
+          phoneNumber: formData.phoneNumber,
+        };
       }
+      // No extra payload needed for Admin
 
-      if (!response.ok) {
-        throw new Error(
-          typeof data === "string"
-            ? data
-            : data.message || "Registration failed"
+
+      console.log("Payload being sent:", payload);
+
+      try {
+        const response = await fetch(
+          `${url}/auth/register/initiate`,
+          {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(payload),
+          }
         );
-      }
 
-      console.log("Registration successful:", data);
-      setIsSuccess(true);
-      navigate("/register-otp", {
-        state: { email: payload.user.email },
-      });
+        const contentType = response.headers.get("content-type");
+        let data;
 
-      setTimeout(() => {
-        setIsSuccess(false);
-        setFormData({
-          firstName: "",
-          lastName: "",
-          email: "",
-          phoneNumber: "",
-          password: "",
-          confirmPassword: "",
-          dateOfBirth: "",
-          drivingLicense: "",
-          drivingLicenseExpiry: "",
-          companyName: "",
-          address: "",
-          city: "",
-          latitude: "",
-          longitude: "",
+        if (contentType && contentType.includes("application/json")) {
+          data = await response.json();
+        } else {
+          data = await response.text();
+        }
+
+        if (!response.ok) {
+          throw new Error(
+            typeof data === "string"
+              ? data
+              : data.message || "Registration failed"
+          );
+        }
+
+        console.log("Registration successful:", data);
+        setIsSuccess(true);
+        navigate("/register-otp", {
+          state: { email: payload.user.email },
         });
 
-        if (map) {
-          map.remove();
-          setMap(null);
+        setTimeout(() => {
+          setIsSuccess(false);
+          setFormData({
+            firstName: "",
+            lastName: "",
+            email: "",
+            phoneNumber: "",
+            password: "",
+            confirmPassword: "",
+            dateOfBirth: "",
+            drivingLicenseStatus: "PENDING",
+            companyName: "",
+            address: "",
+            city: "",
+            latitude: "",
+            longitude: "",
+          });
+
+          if (map) {
+            map.remove();
+            setMap(null);
+          }
           setMarker(null);
-        }
-        setShowMap(false);
-      }, 3000);
-    } catch (error) {
-      console.error("Registration error:", error);
-      setApiError(
-        error.message ||
+          setShowMap(false);
+        }, 3000);
+      } catch (error) {
+        console.error("Registration error:", error);
+        setApiError(
+          error.message ||
           "An error occurred during registration. Please try again."
-      );
-    } finally {
-      hideLoader();
+        );
+      } finally {
+        hideLoader();
+      }
     }
   };
 
@@ -521,11 +510,10 @@ const Register = () => {
                 <motion.button
                   type="button"
                   onClick={() => handleRoleChange("customer")}
-                  className={`flex-1 py-4 px-4 rounded-lg border flex items-center justify-center space-x-2 transition-all duration-300 ${
-                    role === "customer"
-                      ? "bg-red-50 border-red-500 text-red-700 shadow-md"
-                      : "border-gray-300 text-gray-500 hover:bg-gray-50"
-                  }`}
+                  className={`flex-1 py-4 px-4 rounded-lg border flex items-center justify-center space-x-2 transition-all duration-300 ${role === "customer"
+                    ? "bg-red-50 border-red-500 text-red-700 shadow-md"
+                    : "border-gray-300 text-gray-500 hover:bg-gray-50"
+                    }`}
                   whileHover={{ scale: role === "customer" ? 1 : 1.03 }}
                   whileTap={{ scale: 0.98 }}
                 >
@@ -535,19 +523,32 @@ const Register = () => {
                 <motion.button
                   type="button"
                   onClick={() => handleRoleChange("manager")}
-                  className={`flex-1 py-4 px-4 rounded-lg border flex items-center justify-center space-x-2 transition-all duration-300 ${
-                    role === "manager"
-                      ? "bg-red-50 border-red-500 text-red-700 shadow-md"
-                      : "border-gray-300 text-gray-500 hover:bg-gray-50"
-                  }`}
+                  className={`flex-1 py-4 px-4 rounded-lg border flex items-center justify-center space-x-2 transition-all duration-300 ${role === "manager"
+                    ? "bg-red-50 border-red-500 text-red-700 shadow-md"
+                    : "border-gray-300 text-gray-500 hover:bg-gray-50"
+                    }`}
                   whileHover={{ scale: role === "manager" ? 1 : 1.03 }}
                   whileTap={{ scale: 0.98 }}
                 >
                   <Briefcase size={18} />
                   <span>Manager</span>
                 </motion.button>
+                <motion.button
+                  type="button"
+                  onClick={() => handleRoleChange("admin")}
+                  className={`flex-1 py-4 px-4 rounded-lg border flex items-center justify-center space-x-2 transition-all duration-300 ${role === "admin"
+                    ? "bg-red-50 border-red-500 text-red-700 shadow-md"
+                    : "border-gray-300 text-gray-500 hover:bg-gray-50"
+                    }`}
+                  whileHover={{ scale: role === "admin" ? 1 : 1.03 }}
+                  whileTap={{ scale: 0.98 }}
+                >
+                  <Shield size={18} />
+                  <span>Admin</span>
+                </motion.button>
               </div>
             </motion.div>
+
 
             {/* Common Fields */}
             <motion.div
@@ -571,9 +572,8 @@ const Register = () => {
                     id="firstName"
                     value={formData.firstName}
                     onChange={handleChange}
-                    className={`block w-full pl-10 pr-3 py-3 sm:text-sm border-2 rounded-md focus:ring-red-500 focus:border-red-500 transition-all duration-300 ${
-                      errors.firstName ? "border-red-300" : "border-gray-300"
-                    }`}
+                    className={`block w-full pl-10 pr-3 py-3 sm:text-sm border-2 rounded-md focus:ring-red-500 focus:border-red-500 transition-all duration-300 ${errors.firstName ? "border-red-300" : "border-gray-300"
+                      }`}
                     placeholder="John"
                     whileFocus={{ scale: 1.01, borderColor: "#ef4444" }}
                   />
@@ -607,9 +607,8 @@ const Register = () => {
                     id="lastName"
                     value={formData.lastName}
                     onChange={handleChange}
-                    className={`block w-full pl-10 pr-3 py-3 sm:text-sm border-2 rounded-md focus:ring-red-500 focus:border-red-500 transition-all duration-300 ${
-                      errors.lastName ? "border-red-300" : "border-gray-300"
-                    }`}
+                    className={`block w-full pl-10 pr-3 py-3 sm:text-sm border-2 rounded-md focus:ring-red-500 focus:border-red-500 transition-all duration-300 ${errors.lastName ? "border-red-300" : "border-gray-300"
+                      }`}
                     placeholder="Doe"
                     whileFocus={{ scale: 1.01, borderColor: "#ef4444" }}
                   />
@@ -643,9 +642,8 @@ const Register = () => {
                   id="email"
                   value={formData.email}
                   onChange={handleChange}
-                  className={`block w-full pl-10 pr-3 py-3 sm:text-sm border-2 rounded-md focus:ring-red-500 focus:border-red-500 transition-all duration-300 ${
-                    errors.email ? "border-red-300" : "border-gray-300"
-                  }`}
+                  className={`block w-full pl-10 pr-3 py-3 sm:text-sm border-2 rounded-md focus:ring-red-500 focus:border-red-500 transition-all duration-300 ${errors.email ? "border-red-300" : "border-gray-300"
+                    }`}
                   placeholder="your@email.com"
                   whileFocus={{ scale: 1.01, borderColor: "#ef4444" }}
                 />
@@ -678,9 +676,8 @@ const Register = () => {
                   id="phoneNumber"
                   value={formData.phoneNumber}
                   onChange={handleChange}
-                  className={`block w-full pl-10 pr-3 py-3 sm:text-sm border-2 rounded-md focus:ring-red-500 focus:border-red-500 transition-all duration-300 ${
-                    errors.phoneNumber ? "border-red-300" : "border-gray-300"
-                  }`}
+                  className={`block w-full pl-10 pr-3 py-3 sm:text-sm border-2 rounded-md focus:ring-red-500 focus:border-red-500 transition-all duration-300 ${errors.phoneNumber ? "border-red-300" : "border-gray-300"
+                    }`}
                   placeholder="989898xxxx"
                   whileFocus={{ scale: 1.01, borderColor: "#ef4444" }}
                 />
@@ -753,9 +750,8 @@ const Register = () => {
                   id="address"
                   value={formData.address}
                   onChange={handleChange}
-                  className={`block w-full pl-10 pr-3 py-3 sm:text-sm border-2 rounded-md focus:ring-red-500 focus:border-red-500 transition-all duration-300 ${
-                    errors.address ? "border-red-300" : "border-gray-300"
-                  }`}
+                  className={`block w-full pl-10 pr-3 py-3 sm:text-sm border-2 rounded-md focus:ring-red-500 focus:border-red-500 transition-all duration-300 ${errors.address ? "border-red-300" : "border-gray-300"
+                    }`}
                   placeholder="123 Main St"
                   whileFocus={{ scale: 1.01, borderColor: "#ef4444" }}
                 />
@@ -771,335 +767,335 @@ const Register = () => {
               )}
             </motion.div>
           </motion.div>
-        )}
+        )
+        }
 
-        {step === 2 && (
-          <motion.div
-            variants={containerVariants}
-            initial="hidden"
-            animate="visible"
-            exit="exit"
-            className="space-y-6"
-          >
+        {
+          step === 2 && (
             <motion.div
-              variants={itemVariants}
-              className="grid grid-cols-2 gap-4"
+              variants={containerVariants}
+              initial="hidden"
+              animate="visible"
+              exit="exit"
+              className="space-y-6"
             >
-              <div>
-                <label
-                  htmlFor="password"
-                  className="block text-sm font-medium text-gray-700"
-                >
-                  Password
-                </label>
-                <div className="mt-1 relative rounded-md shadow-sm">
-                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                    <Key size={16} className="text-gray-400" />
-                  </div>
-                  <motion.input
-                    type="password"
-                    name="password"
-                    id="password"
-                    value={formData.password}
-                    onChange={handleChange}
-                    className={`block w-full pl-10 pr-3 py-3 sm:text-sm border-2 rounded-md focus:ring-red-500 focus:border-red-500 transition-all duration-300 ${
-                      errors.password ? "border-red-300" : "border-gray-300"
-                    }`}
-                    placeholder="••••••"
-                    whileFocus={{ scale: 1.01, borderColor: "#ef4444" }}
-                  />
-                </div>
-                {errors.password && (
-                  <motion.p
-                    initial={{ opacity: 0, y: -10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    className="mt-1 text-xs text-red-600 flex items-center"
+              <motion.div
+                variants={itemVariants}
+                className="grid grid-cols-2 gap-4"
+              >
+                <div>
+                  <label
+                    htmlFor="password"
+                    className="block text-sm font-medium text-gray-700"
                   >
-                    <AlertCircle size={12} className="mr-1" /> {errors.password}
-                  </motion.p>
-                )}
-              </div>
-
-              <div>
-                <label
-                  htmlFor="confirmPassword"
-                  className="block text-sm font-medium text-gray-700"
-                >
-                  Confirm Password
-                </label>
-                <div className="mt-1 relative rounded-md shadow-sm">
-                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                    <Key size={16} className="text-gray-400" />
+                    Password
+                  </label>
+                  <div className="mt-1 relative rounded-md shadow-sm">
+                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                      <Key size={16} className="text-gray-400" />
+                    </div>
+                    <motion.input
+                      type="password"
+                      name="password"
+                      id="password"
+                      value={formData.password}
+                      onChange={handleChange}
+                      className={`block w-full pl-10 pr-3 py-3 sm:text-sm border-2 rounded-md focus:ring-red-500 focus:border-red-500 transition-all duration-300 ${errors.password ? "border-red-300" : "border-gray-300"
+                        }`}
+                      placeholder="••••••"
+                      whileFocus={{ scale: 1.01, borderColor: "#ef4444" }}
+                    />
                   </div>
-                  <motion.input
-                    type="password"
-                    name="confirmPassword"
-                    id="confirmPassword"
-                    value={formData.confirmPassword}
-                    onChange={handleChange}
-                    className={`block w-full pl-10 pr-3 py-3 sm:text-sm border-2 rounded-md focus:ring-red-500 focus:border-red-500 transition-all duration-300 ${
-                      errors.confirmPassword
+                  {errors.password && (
+                    <motion.p
+                      initial={{ opacity: 0, y: -10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      className="mt-1 text-xs text-red-600 flex items-center"
+                    >
+                      <AlertCircle size={12} className="mr-1" /> {errors.password}
+                    </motion.p>
+                  )}
+                </div>
+
+                <div>
+                  <label
+                    htmlFor="confirmPassword"
+                    className="block text-sm font-medium text-gray-700"
+                  >
+                    Confirm Password
+                  </label>
+                  <div className="mt-1 relative rounded-md shadow-sm">
+                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                      <Key size={16} className="text-gray-400" />
+                    </div>
+                    <motion.input
+                      type="password"
+                      name="confirmPassword"
+                      id="confirmPassword"
+                      value={formData.confirmPassword}
+                      onChange={handleChange}
+                      className={`block w-full pl-10 pr-3 py-3 sm:text-sm border-2 rounded-md focus:ring-red-500 focus:border-red-500 transition-all duration-300 ${errors.confirmPassword
                         ? "border-red-300"
                         : "border-gray-300"
-                    }`}
-                    placeholder="••••••"
+                        }`}
+                      placeholder="••••••"
+                      whileFocus={{ scale: 1.01, borderColor: "#ef4444" }}
+                    />
+                  </div>
+                  {errors.confirmPassword && (
+                    <motion.p
+                      initial={{ opacity: 0, y: -10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      className="mt-1 text-xs text-red-600 flex items-center"
+                    >
+                      <AlertCircle size={12} className="mr-1" />{" "}
+                      {errors.confirmPassword}
+                    </motion.p>
+                  )}
+                </div>
+              </motion.div>
+            </motion.div>
+          )
+        }
+
+        {
+          step === 3 && role === "manager" && (
+            <motion.div
+              variants={containerVariants}
+              initial="hidden"
+              animate="visible"
+              exit="exit"
+              className="space-y-6"
+            >
+              <motion.div variants={itemVariants}>
+                <label
+                  htmlFor="companyName"
+                  className="block text-sm font-medium text-gray-700"
+                >
+                  Company Name
+                </label>
+                <div className="mt-1 relative rounded-md shadow-sm">
+                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                    <Building size={16} className="text-gray-400" />
+                  </div>
+                  <motion.input
+                    type="text"
+                    name="companyName"
+                    id="companyName"
+                    value={formData.companyName}
+                    onChange={handleChange}
+                    className={`block w-full pl-10 pr-3 py-3 sm:text-sm border-2 rounded-md focus:ring-red-500 focus:border-red-500 transition-all duration-300 ${errors.companyName ? "border-red-300" : "border-gray-300"
+                      }`}
+                    placeholder="Acme Inc."
                     whileFocus={{ scale: 1.01, borderColor: "#ef4444" }}
                   />
                 </div>
-                {errors.confirmPassword && (
+                {errors.companyName && (
                   <motion.p
                     initial={{ opacity: 0, y: -10 }}
                     animate={{ opacity: 1, y: 0 }}
                     className="mt-1 text-xs text-red-600 flex items-center"
                   >
                     <AlertCircle size={12} className="mr-1" />{" "}
-                    {errors.confirmPassword}
+                    {errors.companyName}
                   </motion.p>
                 )}
-              </div>
-            </motion.div>
-          </motion.div>
-        )}
+              </motion.div>
 
-        {step === 3 && role === "manager" && (
-          <motion.div
-            variants={containerVariants}
-            initial="hidden"
-            animate="visible"
-            exit="exit"
-            className="space-y-6"
-          >
-            <motion.div variants={itemVariants}>
-              <label
-                htmlFor="companyName"
-                className="block text-sm font-medium text-gray-700"
-              >
-                Company Name
-              </label>
-              <div className="mt-1 relative rounded-md shadow-sm">
-                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <Building size={16} className="text-gray-400" />
-                </div>
-                <motion.input
-                  type="text"
-                  name="companyName"
-                  id="companyName"
-                  value={formData.companyName}
-                  onChange={handleChange}
-                  className={`block w-full pl-10 pr-3 py-3 sm:text-sm border-2 rounded-md focus:ring-red-500 focus:border-red-500 transition-all duration-300 ${
-                    errors.companyName ? "border-red-300" : "border-gray-300"
-                  }`}
-                  placeholder="Acme Inc."
-                  whileFocus={{ scale: 1.01, borderColor: "#ef4444" }}
-                />
-              </div>
-              {errors.companyName && (
-                <motion.p
-                  initial={{ opacity: 0, y: -10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  className="mt-1 text-xs text-red-600 flex items-center"
+              <motion.div variants={itemVariants}>
+                <label
+                  htmlFor="address"
+                  className="block text-sm font-medium text-gray-700"
                 >
-                  <AlertCircle size={12} className="mr-1" />{" "}
-                  {errors.companyName}
-                </motion.p>
-              )}
-            </motion.div>
-
-            <motion.div variants={itemVariants}>
-              <label
-                htmlFor="address"
-                className="block text-sm font-medium text-gray-700"
-              >
-                Address
-              </label>
-              <div className="mt-1 relative rounded-md shadow-sm">
-                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <MapPin size={16} className="text-gray-400" />
-                </div>
-                <motion.input
-                  type="text"
-                  name="address"
-                  id="address"
-                  value={formData.address}
-                  onChange={handleChange}
-                  className={`block w-full pl-10 pr-3 py-3 sm:text-sm border-2 rounded-md focus:ring-red-500 focus:border-red-500 transition-all duration-300 ${
-                    errors.address ? "border-red-300" : "border-gray-300"
-                  }`}
-                  placeholder="123 Main St"
-                  whileFocus={{ scale: 1.01, borderColor: "#ef4444" }}
-                />
-              </div>
-              {errors.address && (
-                <motion.p
-                  initial={{ opacity: 0, y: -10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  className="mt-1 text-xs text-red-600 flex items-center"
-                >
-                  <AlertCircle size={12} className="mr-1" /> {errors.address}
-                </motion.p>
-              )}
-            </motion.div>
-
-            <motion.div variants={itemVariants}>
-              <label
-                htmlFor="city"
-                className="block text-sm font-medium text-gray-700"
-              >
-                City
-              </label>
-              <div className="mt-1 flex items-center space-x-2">
-                <div className="relative rounded-md shadow-sm flex-grow">
+                  Address
+                </label>
+                <div className="mt-1 relative rounded-md shadow-sm">
                   <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                    <Building size={16} className="text-gray-400" />
+                    <MapPin size={16} className="text-gray-400" />
                   </div>
                   <motion.input
                     type="text"
-                    name="city"
-                    id="city"
-                    value={formData.city}
+                    name="address"
+                    id="address"
+                    value={formData.address}
                     onChange={handleChange}
-                    className={`block w-full pl-10 pr-3 py-3 sm:text-sm border-2 rounded-md focus:ring-red-500 focus:border-red-500 transition-all duration-300 ${
-                      errors.city ? "border-red-300" : "border-gray-300"
-                    }`}
-                    placeholder="Mumbai"
+                    className={`block w-full pl-10 pr-3 py-3 sm:text-sm border-2 rounded-md focus:ring-red-500 focus:border-red-500 transition-all duration-300 ${errors.address ? "border-red-300" : "border-gray-300"
+                      }`}
+                    placeholder="123 Main St"
                     whileFocus={{ scale: 1.01, borderColor: "#ef4444" }}
                   />
                 </div>
-                <motion.button
-                  type="button"
-                  onClick={searchCity}
-                  disabled={isSearchingCity}
-                  className="inline-flex items-center px-4 py-3 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 transition-all duration-300"
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-                >
-                  {isSearchingCity ? (
-                    <svg
-                      className="animate-spin h-4 w-4 text-white"
-                      xmlns="http://www.w3.org/2000/svg"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                    >
-                      <circle
-                        className="opacity-25"
-                        cx="12"
-                        cy="12"
-                        r="10"
-                        stroke="currentColor"
-                        strokeWidth="4"
-                      ></circle>
-                      <path
-                        className="opacity-75"
-                        fill="currentColor"
-                        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                      ></path>
-                    </svg>
-                  ) : (
-                    <Search size={16} />
-                  )}
-                </motion.button>
-              </div>
-              {errors.city && (
-                <motion.p
-                  initial={{ opacity: 0, y: -10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  className="mt-1 text-xs text-red-600 flex items-center"
-                >
-                  <AlertCircle size={12} className="mr-1" /> {errors.city}
-                </motion.p>
-              )}
-            </motion.div>
-
-            {/* Location Fields with Map Integration */}
-            <motion.div variants={itemVariants}>
-              <div className="flex justify-between items-center">
-                <label className="block text-sm font-medium text-gray-700">
-                  Location
-                </label>
-                <motion.button
-                  type="button"
-                  onClick={toggleMap}
-                  className="text-sm text-red-600 hover:text-red-500 flex items-center"
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-                >
-                  {showMap ? (
-                    <>
-                      <X size={14} className="mr-1" /> Hide Map
-                    </>
-                  ) : (
-                    <>
-                      <MapPin size={14} className="mr-1" /> Show Map
-                    </>
-                  )}
-                </motion.button>
-              </div>
-
-              <AnimatePresence>
-                {showMap && (
-                  <motion.div
-                    initial={{ opacity: 0, height: 0 }}
-                    animate={{ opacity: 1, height: "auto" }}
-                    exit={{ opacity: 0, height: 0 }}
-                    transition={{ duration: 0.3 }}
-                    className="mt-2 bg-gray-100 rounded-md p-1 overflow-hidden"
+                {errors.address && (
+                  <motion.p
+                    initial={{ opacity: 0, y: -10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="mt-1 text-xs text-red-600 flex items-center"
                   >
-                    <div id="map" className="h-64 w-full rounded-md"></div>
-                    <p className="text-xs text-gray-600 mt-1 px-1">
-                      Click on the map or drag the marker to set your business
-                      location
-                    </p>
-                  </motion.div>
+                    <AlertCircle size={12} className="mr-1" /> {errors.address}
+                  </motion.p>
                 )}
-              </AnimatePresence>
+              </motion.div>
 
-              <div className="grid grid-cols-2 gap-4 mt-2">
-                <div>
-                  <label
-                    htmlFor="latitude"
-                    className="block text-xs text-gray-500"
-                  >
-                    Latitude
-                  </label>
-                  <input
-                    type="text"
-                    name="latitude"
-                    id="latitude"
-                    value={formData.latitude}
-                    readOnly
-                    className="mt-1 block w-full py-2 px-3 bg-gray-50 border border-gray-300 rounded-md shadow-sm text-sm text-gray-900"
-                  />
-                </div>
-                <div>
-                  <label
-                    htmlFor="longitude"
-                    className="block text-xs text-gray-500"
-                  >
-                    Longitude
-                  </label>
-                  <input
-                    type="text"
-                    name="longitude"
-                    id="longitude"
-                    value={formData.longitude}
-                    readOnly
-                    className="mt-1 block w-full py-2 px-3 bg-gray-50 border border-gray-300 rounded-md shadow-sm text-sm text-gray-900"
-                  />
-                </div>
-              </div>
-              {errors.location && (
-                <motion.p
-                  initial={{ opacity: 0, y: -10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  className="mt-1 text-xs text-red-600 flex items-center"
+              <motion.div variants={itemVariants}>
+                <label
+                  htmlFor="city"
+                  className="block text-sm font-medium text-gray-700"
                 >
-                  <AlertCircle size={12} className="mr-1" /> {errors.location}
-                </motion.p>
-              )}
+                  City
+                </label>
+                <div className="mt-1 flex items-center space-x-2">
+                  <div className="relative rounded-md shadow-sm flex-grow">
+                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                      <Building size={16} className="text-gray-400" />
+                    </div>
+                    <motion.input
+                      type="text"
+                      name="city"
+                      id="city"
+                      value={formData.city}
+                      onChange={handleChange}
+                      className={`block w-full pl-10 pr-3 py-3 sm:text-sm border-2 rounded-md focus:ring-red-500 focus:border-red-500 transition-all duration-300 ${errors.city ? "border-red-300" : "border-gray-300"
+                        }`}
+                      placeholder="Mumbai"
+                      whileFocus={{ scale: 1.01, borderColor: "#ef4444" }}
+                    />
+                  </div>
+                  <motion.button
+                    type="button"
+                    onClick={searchCity}
+                    disabled={isSearchingCity}
+                    className="inline-flex items-center px-4 py-3 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 transition-all duration-300"
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                  >
+                    {isSearchingCity ? (
+                      <svg
+                        className="animate-spin h-4 w-4 text-white"
+                        xmlns="http://www.w3.org/2000/svg"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                      >
+                        <circle
+                          className="opacity-25"
+                          cx="12"
+                          cy="12"
+                          r="10"
+                          stroke="currentColor"
+                          strokeWidth="4"
+                        ></circle>
+                        <path
+                          className="opacity-75"
+                          fill="currentColor"
+                          d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                        ></path>
+                      </svg>
+                    ) : (
+                      <Search size={16} />
+                    )}
+                  </motion.button>
+                </div>
+                {errors.city && (
+                  <motion.p
+                    initial={{ opacity: 0, y: -10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="mt-1 text-xs text-red-600 flex items-center"
+                  >
+                    <AlertCircle size={12} className="mr-1" /> {errors.city}
+                  </motion.p>
+                )}
+              </motion.div>
+
+              {/* Location Fields with Map Integration */}
+              <motion.div variants={itemVariants}>
+                <div className="flex justify-between items-center">
+                  <label className="block text-sm font-medium text-gray-700">
+                    Location
+                  </label>
+                  <motion.button
+                    type="button"
+                    onClick={toggleMap}
+                    className="text-sm text-red-600 hover:text-red-500 flex items-center"
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                  >
+                    {showMap ? (
+                      <>
+                        <X size={14} className="mr-1" /> Hide Map
+                      </>
+                    ) : (
+                      <>
+                        <MapPin size={14} className="mr-1" /> Show Map
+                      </>
+                    )}
+                  </motion.button>
+                </div>
+
+                <AnimatePresence>
+                  {showMap && (
+                    <motion.div
+                      initial={{ opacity: 0, height: 0 }}
+                      animate={{ opacity: 1, height: "auto" }}
+                      exit={{ opacity: 0, height: 0 }}
+                      transition={{ duration: 0.3 }}
+                      className="mt-2 bg-gray-100 rounded-md p-1 overflow-hidden"
+                    >
+                      <div id="map" className="h-64 w-full rounded-md"></div>
+                      <p className="text-xs text-gray-600 mt-1 px-1">
+                        Click on the map or drag the marker to set your business
+                        location
+                      </p>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+
+                <div className="grid grid-cols-2 gap-4 mt-2">
+                  <div>
+                    <label
+                      htmlFor="latitude"
+                      className="block text-xs text-gray-500"
+                    >
+                      Latitude
+                    </label>
+                    <input
+                      type="text"
+                      name="latitude"
+                      id="latitude"
+                      value={formData.latitude}
+                      readOnly
+                      className="mt-1 block w-full py-2 px-3 bg-gray-50 border border-gray-300 rounded-md shadow-sm text-sm text-gray-900"
+                    />
+                  </div>
+                  <div>
+                    <label
+                      htmlFor="longitude"
+                      className="block text-xs text-gray-500"
+                    >
+                      Longitude
+                    </label>
+                    <input
+                      type="text"
+                      name="longitude"
+                      id="longitude"
+                      value={formData.longitude}
+                      readOnly
+                      className="mt-1 block w-full py-2 px-3 bg-gray-50 border border-gray-300 rounded-md shadow-sm text-sm text-gray-900"
+                    />
+                  </div>
+                </div>
+                {errors.location && (
+                  <motion.p
+                    initial={{ opacity: 0, y: -10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="mt-1 text-xs text-red-600 flex items-center"
+                  >
+                    <AlertCircle size={12} className="mr-1" /> {errors.location}
+                  </motion.p>
+                )}
+              </motion.div>
             </motion.div>
-          </motion.div>
-        )}
-      </motion.div>
+          )
+        }
+      </motion.div >
     );
   };
 
@@ -1256,11 +1252,10 @@ const Register = () => {
                 }}
               >
                 <div
-                  className={`h-6 w-6 rounded-full flex items-center justify-center text-xs ${
-                    currentStep >= 1
-                      ? "bg-white text-red-600"
-                      : "bg-red-800/50 text-white"
-                  }`}
+                  className={`h-6 w-6 rounded-full flex items-center justify-center text-xs ${currentStep >= 1
+                    ? "bg-white text-red-600"
+                    : "bg-red-800/50 text-white"
+                    }`}
                 >
                   1
                 </div>
@@ -1275,11 +1270,10 @@ const Register = () => {
                 }}
               >
                 <div
-                  className={`h-6 w-6 rounded-full flex items-center justify-center text-xs ${
-                    currentStep >= 2
-                      ? "bg-white text-red-600"
-                      : "bg-red-800/50 text-white"
-                  }`}
+                  className={`h-6 w-6 rounded-full flex items-center justify-center text-xs ${currentStep >= 2
+                    ? "bg-white text-red-600"
+                    : "bg-red-800/50 text-white"
+                    }`}
                 >
                   2
                 </div>
@@ -1295,11 +1289,10 @@ const Register = () => {
                   }}
                 >
                   <div
-                    className={`h-6 w-6 rounded-full flex items-center justify-center text-xs ${
-                      currentStep >= 3
-                        ? "bg-white text-red-600"
-                        : "bg-red-800/50 text-white"
-                    }`}
+                    className={`h-6 w-6 rounded-full flex items-center justify-center text-xs ${currentStep >= 3
+                      ? "bg-white text-red-600"
+                      : "bg-red-800/50 text-white"
+                      }`}
                   >
                     3
                   </div>
@@ -1424,8 +1417,9 @@ const Register = () => {
                       </motion.div>
                       Processing...
                     </motion.div>
-                  ) : currentStep < (role === "customer" ? 2 : 3) ? (
+                  ) : currentStep < (role === "customer" ? 2 : (role === "manager" || role === "admin") ? 3 : 2) ? (
                     <motion.div className="flex items-center">
+
                       Continue <ChevronRight size={16} className="ml-1" />
                     </motion.div>
                   ) : (

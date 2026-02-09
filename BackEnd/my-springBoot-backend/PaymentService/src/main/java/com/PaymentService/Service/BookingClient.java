@@ -10,7 +10,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import java.util.Map;
 import java.util.UUID;
 
-@FeignClient(name = "booking-service")
+@FeignClient(name = "BOOKING-SERVICE")
 public interface BookingClient {
     @GetMapping("/api/bookings/{id}")
     BookingDTO getBookingById(@PathVariable("id") int bookingId);

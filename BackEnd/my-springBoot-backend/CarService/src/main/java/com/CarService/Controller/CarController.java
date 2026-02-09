@@ -1,12 +1,12 @@
 package com.CarService.Controller;
 
-
 import com.CarService.Entity.Car;
 import com.CarService.Entity.CarDto;
 import com.CarService.Service.CarService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.CrossOrigin;
 
 import java.util.List;
 import java.util.Optional;
@@ -45,7 +45,6 @@ public class CarController {
         return carService.getValidCarByCompanyId(companyId);
     }
 
-
     @PostMapping
     public ResponseEntity<Car> addCar(@RequestBody CarDto carDto) {
         System.out.println("=== DEBUG: Controller received CarDto ===");
@@ -55,7 +54,7 @@ public class CarController {
         System.out.println("RCbook: " + carDto.getRCbook());
         System.out.println("All DTO fields: " + carDto.toString());
         System.out.println("========================================");
-        
+
         // Map CarDto to Car entity
         Car car = new Car();
         car.setCarId(carDto.getCarId());
@@ -71,11 +70,11 @@ public class CarController {
         car.setImageUrls(carDto.getImageUrls());
         car.setStatus(carDto.getStatus());
         car.setRCbook(carDto.getRCbook()); // This is the key mapping!
-        
+
         System.out.println("=== DEBUG: Mapped to Car entity ===");
         System.out.println("Car RCbook: " + car.getRCbook());
         System.out.println("================================");
-        
+
         return ResponseEntity.ok(carService.addCar(car));
     }
 
@@ -101,27 +100,21 @@ public class CarController {
 
     @PutMapping("/{id}/status")
     public ResponseEntity<Car> updateCarStatus(@PathVariable("id") int carId,
-                                               @RequestBody Car statusDto) {
+            @RequestBody Car statusDto) {
         Car updatedCar = carService.updateCarStatus(carId, statusDto.getStatus());
         return ResponseEntity.ok(updatedCar);
     }
 
-
     @GetMapping("/total/companyId/{companyId}")
-    public ResponseEntity<Integer> findTotalCars(@PathVariable("companyId") Integer companyId){
+    public ResponseEntity<Integer> findTotalCars(@PathVariable("companyId") Integer companyId) {
         ResponseEntity<Integer> totalCars = carService.getCarsCountByCompanyId(companyId);
         return totalCars;
     }
 
     @GetMapping("/count/status/{status}")
-    public ResponseEntity<Long> getBookedCarsCount(@PathVariable("status") String status ) {
-        long count = carService.getBookedCarCount(status );
+    public ResponseEntity<Long> getBookedCarsCount(@PathVariable("status") String status) {
+        long count = carService.getBookedCarCount(status);
         return ResponseEntity.ok(count);
     }
 
-
-
-
-
 }
-

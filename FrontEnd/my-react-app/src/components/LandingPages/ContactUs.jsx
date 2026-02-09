@@ -1,10 +1,10 @@
 
 
-import React, { useState , useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Mail, Send, MapPin, Clock, Phone, MessageSquare, Star, CheckCircle, Car, Shield, CreditCard } from 'lucide-react';
 import Navbar from './Navbar';
 import { useLocation } from 'react-router-dom';
-import {useLoading} from '../Loader/LoadingProvider'
+import { useLoading } from '../Loader/LoadingProvider'
 
 
 const ContactUs = () => {
@@ -17,9 +17,9 @@ const ContactUs = () => {
   });
   const [isSubmitted, setIsSubmitted] = useState(false);
   const location = useLocation();
-  const { showLoader, hideLoader ,isLoading} = useLoading()
+  const { showLoader, hideLoader, isLoading } = useLoading()
 
-   useEffect(() => {
+  useEffect(() => {
     if (location.hash) {
       const element = document.querySelector(location.hash);
       if (element) {
@@ -35,8 +35,8 @@ const ContactUs = () => {
     });
   };
 
- const handleSubmit = async (e) => {
-  showLoader("Submitting Query...")
+  const handleSubmit = async (e) => {
+    showLoader("Submitting Query...")
     e.preventDefault();
     try {
       const token = localStorage.getItem('token');
@@ -55,7 +55,7 @@ const ContactUs = () => {
         body: JSON.stringify(formData),
       });
 
-      
+
       if (!response.ok) {
         throw new Error('Failed to submit form');
       }
@@ -106,7 +106,7 @@ const ContactUs = () => {
   ];
 
   const quickStats = [
-   
+
   ];
 
   const faqItems = [
@@ -130,7 +130,7 @@ const ContactUs = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-red-600/10 to-indigo-600/10">
-        <Navbar />
+      <Navbar />
       <div className="relative overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-r from-red-600/10 to-indigo-600/10"></div>
         <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 sm:py-16 lg:py-20">
@@ -142,7 +142,7 @@ const ContactUs = () => {
               Get in Touch
             </h1>
             <p className="text-lg sm:text-xl text-gray-600 max-w-3xl mx-auto leading-relaxed px-4">
-              Have questions about your rental? Need support? We're here to help via email, 
+              Have questions about your rental? Need support? We're here to help via email,
               ensuring you get personalized assistance for all your car rental needs.
             </p>
           </div>
@@ -216,107 +216,107 @@ const ContactUs = () => {
             </div>
           ) : (
             <form>
-            <div className="bg-white rounded-2xl shadow-xl p-6 sm:p-8 lg:p-10">
-							<div className="grid sm:grid-cols-2 gap-6 mb-6">
-                <div>
-                  <label htmlFor="name" className="block text-sm font-semibold text-gray-700 mb-2">
-                    Full Name *
-                  </label>
-                  <input
-                    type="text"
-                    id="name"
-                    name="name"
-                    required
-                    value={formData.name}
-                    onChange={handleInputChange}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
-                    placeholder="Enter your full name"
-                  />
+              <div className="bg-white rounded-2xl shadow-xl p-6 sm:p-8 lg:p-10">
+                <div className="grid sm:grid-cols-2 gap-6 mb-6">
+                  <div>
+                    <label htmlFor="name" className="block text-sm font-semibold text-gray-700 mb-2">
+                      Full Name *
+                    </label>
+                    <input
+                      type="text"
+                      id="name"
+                      name="name"
+                      required
+                      value={formData.name}
+                      onChange={handleInputChange}
+                      className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
+                      placeholder="Enter your full name"
+                    />
+                  </div>
+                  <div>
+                    <label htmlFor="email" className="block text-sm font-semibold text-gray-700 mb-2">
+                      Email Address *
+                    </label>
+                    <input
+                      type="email"
+                      id="email"
+                      name="email"
+                      required
+                      value={formData.email}
+                      onChange={handleInputChange}
+                      className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
+                      placeholder="Enter your email address"
+                    />
+                  </div>
                 </div>
-                <div>
-                  <label htmlFor="email" className="block text-sm font-semibold text-gray-700 mb-2">
-                    Email Address *
-                  </label>
-                  <input
-                    type="email"
-                    id="email"
-                    name="email"
-                    required
-                    value={formData.email}
-                    onChange={handleInputChange}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
-                    placeholder="Enter your email address"
-                  />
+                <div className="grid sm:grid-cols-2 gap-6 mb-6">
+                  <div>
+                    <label htmlFor="category" className="block text-sm font-semibold text-gray-700 mb-2">
+                      Inquiry Category *
+                    </label>
+                    <select
+                      id="category"
+                      name="category"
+                      required
+                      value={formData.category}
+                      onChange={handleInputChange}
+                      className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
+                    >
+                      <option value="">Select a category</option>
+                      <option value="booking">Booking Support</option>
+                      <option value="payment">Payment Issues</option>
+                      <option value="insurance">Insurance & Coverage</option>
+                      <option value="general">General Inquiry</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label htmlFor="subject" className="block text-sm font-semibold text-gray-700 mb-2">
+                      Subject *
+                    </label>
+                    <input
+                      type="text"
+                      id="subject"
+                      name="subject"
+                      required
+                      value={formData.subject}
+                      onChange={handleInputChange}
+                      className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
+                      placeholder="Brief subject of your inquiry"
+                    />
+                  </div>
                 </div>
-              </div>
-              <div className="grid sm:grid-cols-2 gap-6 mb-6">
-                <div>
-                  <label htmlFor="category" className="block text-sm font-semibold text-gray-700 mb-2">
-                    Inquiry Category *
-                  </label>
-                  <select
-                    id="category"
-                    name="category"
-                    required
-                    value={formData.category}
-                    onChange={handleInputChange}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
-                  >
-                    <option value="">Select a category</option>
-                    <option value="booking">Booking Support</option>
-                    <option value="payment">Payment Issues</option>
-                    <option value="insurance">Insurance & Coverage</option>
-                    <option value="general">General Inquiry</option>
-                  </select>
-                </div>
-                <div>
-                  <label htmlFor="subject" className="block text-sm font-semibold text-gray-700 mb-2">
-                    Subject *
-                  </label>
-                  <input
-                    type="text"
-                    id="subject"
-                    name="subject"
-                    required
-                    value={formData.subject}
-                    onChange={handleInputChange}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
-                    placeholder="Brief subject of your inquiry"
-                  />
-                </div>
-              </div>
 
-              <div className="mb-8">
-                <label htmlFor="message" className="block text-sm font-semibold text-gray-700 mb-2">
-                  Message *
-                </label>
-                <textarea
-                  id="message"
-                  name="message"
-                  required
-                  rows="6"
-                  value={formData.message}
-                  onChange={handleInputChange}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 resize-none"
-                  placeholder="Please provide detailed information about your inquiry. Include booking reference numbers if applicable."
-                ></textarea>
-              </div>
+                <div className="mb-8">
+                  <label htmlFor="message" className="block text-sm font-semibold text-gray-700 mb-2">
+                    Message *
+                  </label>
+                  <textarea
+                    id="message"
+                    name="message"
+                    required
+                    rows="6"
+                    value={formData.message}
+                    onChange={handleInputChange}
+                    className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 resize-none"
+                    placeholder="Please provide detailed information about your inquiry. Include booking reference numbers if applicable."
+                  ></textarea>
+                </div>
 
-              <button
-              onClick={handleSubmit}
-                type="submit"
-                className="w-full bg-gradient-to-r from-red-400 to-red-600 text-white py-4 px-8 rounded-xl font-semibold text-lg hover:from-blue-700 hover:to-indigo-700 transition-all duration-300 shadow-lg hover:shadow-xl flex items-center justify-center gap-3 group"
-              >
-                <Send className="w-5 h-5 group-hover:translate-x-1 transition-transform duration-200" />
-                Send Message
-              </button>
+                <button
+                  onClick={handleSubmit}
+                  type="submit"
+                  className="w-full bg-gradient-to-r from-red-400 to-red-600 text-white py-4 px-8 rounded-xl font-semibold text-lg hover:from-blue-700 hover:to-indigo-700 transition-all duration-300 shadow-lg hover:shadow-xl flex items-center justify-center gap-3 group"
+                >
+                  <Send className="w-5 h-5 group-hover:translate-x-1 transition-transform duration-200" />
+                  Send Message
+                </button>
               </div>
-           </form>
+            </form>
           )}
         </div>
       </div>
 
-     
+
 
       {/* FAQ Section */}
       <div id="faq-section" className="py-12 sm:py-16 lg:py-20 bg-white/50 backdrop-blur-sm">

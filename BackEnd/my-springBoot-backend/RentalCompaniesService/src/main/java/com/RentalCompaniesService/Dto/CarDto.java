@@ -1,5 +1,7 @@
 package com.RentalCompaniesService.Dto;
 
+
+import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.persistence.Column;
 import lombok.*;
 
@@ -24,6 +26,7 @@ public class CarDto {
     private List<String> features;
     private List<String> imageUrls;
     private String status;
+    @JsonProperty("RCbook")
     private String RCbook;
     private LocalDateTime createdAt;
 }

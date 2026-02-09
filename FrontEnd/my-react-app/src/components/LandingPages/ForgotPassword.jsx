@@ -89,7 +89,7 @@ export default function ForgotPassword() {
 
     try {
       // Sample API call for sending OTP
-      const response = await fetch("http://localhost:8084/auth/forgot-password/send-otp", {
+      const response = await fetch("http://localhost:9090/auth/forgot-password/send-otp", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -127,7 +127,7 @@ export default function ForgotPassword() {
 
     try {
       // Sample API call for verifying OTP
-      const response = await fetch("http://localhost:8084/auth/forgot-password/verify-otp", {
+      const response = await fetch("http://localhost:9090/auth/forgot-password/verify-otp", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -175,7 +175,7 @@ export default function ForgotPassword() {
 
     try {
       // Sample API call for resetting password
-      const response = await fetch("http://localhost:8084/auth/forgot-password/reset", {
+      const response = await fetch("http://localhost:9090/auth/forgot-password/reset", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -210,7 +210,7 @@ export default function ForgotPassword() {
     setError("")
 
     try {
-      const response = await fetch("http://localhost:8084/auth/forgot-password/resend-otp", {
+      const response = await fetch("http://localhost:9090/auth/forgot-password/resend-otp", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -442,7 +442,7 @@ export default function ForgotPassword() {
               className="text-4xl font-bold bg-gradient-to-r from-red-600 to-orange-600 bg-clip-text text-transparent mb-2"
               variants={itemVariants}
             >
-              DriveEasy
+              RentEasy
             </motion.h1>
 
             <motion.h2 className="text-2xl font-semibold text-gray-800 mb-2" variants={itemVariants}>
@@ -460,11 +460,10 @@ export default function ForgotPassword() {
               {[1, 2, 3].map((step) => (
                 <motion.div
                   key={step}
-                  className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium ${
-                    step <= currentStep
-                      ? "bg-gradient-to-r from-red-400 to-red-500 text-white"
-                      : "bg-gray-200 text-gray-500"
-                  }`}
+                  className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium ${step <= currentStep
+                    ? "bg-gradient-to-r from-red-400 to-red-500 text-white"
+                    : "bg-gray-200 text-gray-500"
+                    }`}
                   animate={{
                     scale: step === currentStep ? 1.1 : 1,
                   }}

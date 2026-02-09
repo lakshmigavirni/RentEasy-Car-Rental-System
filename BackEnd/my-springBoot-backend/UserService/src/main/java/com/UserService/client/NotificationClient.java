@@ -5,7 +5,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 
-@FeignClient(name = "notification-service")
+@FeignClient(name = "NOTIFICATION-SERVICE")
 public interface NotificationClient {
 
     @PostMapping("/api/notification/send-otp")

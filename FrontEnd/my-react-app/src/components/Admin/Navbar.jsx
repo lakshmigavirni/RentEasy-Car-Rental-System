@@ -6,7 +6,7 @@ const Navbar = () => {
   const location = useLocation();
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
-  const navigate= useNavigate()
+  const navigate = useNavigate()
 
   const navItems = [
     { id: 'dashboard', label: 'Dashboard', icon: Car, path: "/admin/dashboard" },
@@ -40,33 +40,32 @@ const Navbar = () => {
     localStorage.clear();
     // Optionally, you can also redirect here if needed
   };
-  
+
 
   return (
     <>
       {/* Fixed Navbar with Blur Background */}
       <nav className={`fixed top-5 left-8 right-8 z-30 transition-all duration-300 rounded-2xl 
-      ${
-        isScrolled 
-          ? 'bg-white/10 backdrop-blur-md border-b border-white/20 shadow-lg' 
+      ${isScrolled
+          ? 'bg-white/10 backdrop-blur-md border-b border-white/20 shadow-lg'
           : 'bg-gradient-to-r from-white-600/90 to-white-700/90  bg-white/10 backdrop-blur-md border-b border-white/20 shadow-lg'
-      }`}>
+        }`}>
         <div className="container mx-auto px-4">
           <div className="flex items-center justify-between h-16  rounded-xl ">
             {/* Logo with Enhanced Styling */}
-            <Link to="/" className="flex items-center space-x-3 group">
+            <Link to="/admin/dashboard" className="flex items-center space-x-3 group">
               <div className="relative">
                 <div className="absolute inset-0 bg-white/20 rounded-full blur-sm group-hover:bg-white/30 transition-all duration-300"></div>
                 <Car className="relative h-8 w-8 text-red-500 drop-shadow-lg" />
               </div>
               <div className="hidden sm:block">
                 <span className="text-red-500 text-xl font-bold tracking-wide drop-shadow-md">
-                  SwiftRides
+                  RentEasy
                 </span>
-               
+
               </div>
               <span className="text-red-400 text-lg font-bold sm:hidden drop-shadow-md">
-                SwiftRides
+                RentEasy
               </span>
             </Link>
 
@@ -80,16 +79,14 @@ const Navbar = () => {
                   <Link
                     key={item.id}
                     to={item.path}
-                    className={`group relative flex items-center space-x-2 px-4 py-2.5 rounded-xl transition-all duration-300 ${
-                      isActive
-                        ? "bg-white/20 text-red-500 shadow-lg backdrop-blur-sm"
-                        : "text-black/90 hover:bg-white/10 hover:text-red-400 hover:shadow-md"
-                    }`}
+                    className={`group relative flex items-center space-x-2 px-4 py-2.5 rounded-xl transition-all duration-300 ${isActive
+                      ? "bg-white/20 text-red-500 shadow-lg backdrop-blur-sm"
+                      : "text-black/90 hover:bg-white/10 hover:text-red-400 hover:shadow-md"
+                      }`}
                     onClick={item.id === "logout" ? handleLogout : undefined}
                   >
-                    <Icon className={`h-4 w-4 transition-transform duration-300 ${
-                      isActive ? 'scale-110' : 'group-hover:scale-105'
-                    }`} />
+                    <Icon className={`h-4 w-4 transition-transform duration-300 ${isActive ? 'scale-110' : 'group-hover:scale-105'
+                      }`} />
                     <span className="font-medium text-sm">{item.label}</span>
                   </Link>
                 );
@@ -107,15 +104,13 @@ const Navbar = () => {
                     key={item.id}
                     to={item.path}
                     title={item.label}
-                    className={`group relative flex items-center justify-center p-3 rounded-xl transition-all duration-300 ${
-                      isActive
-                        ? "bg-white/20 text-white shadow-lg backdrop-blur-sm"
-                        : "text-white/90 hover:bg-white/10 hover:text-white hover:shadow-md"
-                    }`}
+                    className={`group relative flex items-center justify-center p-3 rounded-xl transition-all duration-300 ${isActive
+                      ? "bg-white/20 text-white shadow-lg backdrop-blur-sm"
+                      : "text-white/90 hover:bg-white/10 hover:text-white hover:shadow-md"
+                      }`}
                   >
-                    <Icon className={`h-5 w-5 text-black transition-transform duration-300 ${
-                      isActive ? 'scale-110 text-red-500' : 'group-hover:scale-105'
-                    }`} />
+                    <Icon className={`h-5 w-5 text-black transition-transform duration-300 ${isActive ? 'scale-110 text-red-500' : 'group-hover:scale-105'
+                      }`} />
                     {isActive && (
                       <div className="absolute bottom-1 left-1/2 transform -translate-x-1/2 w-1 h-1 bg-white rounded-full "></div>
                     )}
@@ -149,9 +144,8 @@ const Navbar = () => {
 
       {/* Enhanced Sidebar */}
       <div
-        className={`fixed top-0 left-0 h-full w-72 bg-gradient-to-b from-red-600 to-red-700 shadow-2xl transform transition-all duration-300 ease-out z-50 md:hidden ${
-          isSidebarOpen ? "translate-x-0" : "-translate-x-full"
-        }`}
+        className={`fixed top-0 left-0 h-full w-72 bg-gradient-to-b from-red-600 to-red-700 shadow-2xl transform transition-all duration-300 ease-out z-50 md:hidden ${isSidebarOpen ? "translate-x-0" : "-translate-x-full"
+          }`}
       >
         {/* Sidebar Header with Gradient */}
         <div className="relative p-6 border-b border-white/20">
@@ -187,19 +181,16 @@ const Navbar = () => {
                 key={item.id}
                 to={item.path}
                 onClick={item.id === "logout" ? handleLogout : closeSidebar}
-                className={`group relative flex items-center space-x-4 px-4 py-4 rounded-xl transition-all duration-300 ${
-                  isActive
-                    ? "bg-white/20 text-white shadow-lg backdrop-blur-sm"
-                    : "text-white/90 hover:bg-white/10 hover:text-white hover:shadow-md"
-                }`}
+                className={`group relative flex items-center space-x-4 px-4 py-4 rounded-xl transition-all duration-300 ${isActive
+                  ? "bg-white/20 text-white shadow-lg backdrop-blur-sm"
+                  : "text-white/90 hover:bg-white/10 hover:text-white hover:shadow-md"
+                  }`}
                 style={{ animationDelay: `${index * 50}ms` }}
               >
-                <div className={`relative p-2 rounded-lg transition-all duration-300 ${
-                  isActive ? 'bg-white/20' : 'group-hover:bg-white/10'
-                }`}>
-                  <Icon className={`h-5 w-5 transition-transform duration-300 ${
-                    isActive ? 'scale-110' : 'group-hover:scale-105'
-                  }`} />
+                <div className={`relative p-2 rounded-lg transition-all duration-300 ${isActive ? 'bg-white/20' : 'group-hover:bg-white/10'
+                  }`}>
+                  <Icon className={`h-5 w-5 transition-transform duration-300 ${isActive ? 'scale-110' : 'group-hover:scale-105'
+                    }`} />
                 </div>
                 <span className="font-medium text-base">{item.label}</span>
                 {isActive && (

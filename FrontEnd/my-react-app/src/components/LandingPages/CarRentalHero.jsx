@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import { MapPin, Calendar, Search, Car, Star, Award, Shield } from 'lucide-react';
 import { useNavigate } from "react-router-dom";
-import {useLoading} from "../Loader/LoadingProvider"
 
 const CarRentalHero = () => {
   const navigate = useNavigate();
@@ -23,33 +22,16 @@ const CarRentalHero = () => {
   const [pickupLocation, setPickupLocation] = useState('');
   const [pickupDate, setPickupDate] = useState(defaultDates.pickup);
   const [returnDate, setReturnDate] = useState(defaultDates.ret);
-  const { showLoader, hideLoader ,isLoading} = useLoading()
 
-
-const handleSearch = async () => {
-  showLoader("Getting Car Ready...")
-    const token = localStorage.getItem('token');
-    const city = pickupLocation;
-    const pickup = pickupDate ? `${pickupDate}T10:00:00` : '';
-    const ret = returnDate ? `${returnDate}T18:00:00` : '';
-    const url = `http://localhost:9090/api/search?city=${city}&pickupDate=${pickup}&returnDate=${ret}`;
-    try {
-      const response = await fetch(url, {
-        method: 'GET',
-        headers: {
-          Authorization: `Bearer ${token}`,
-          'Content-Type': 'application/json',
-        },
-      });
-      const data = await response.json();
-      console.log(data);
-      // Navigate to CarRentalPlatform and pass results
-      navigate("/all-car", { state: { searchResults: data } });
-      
-    } catch (error) {
-      console.error('Error searching cars:', error);
-    }
-    hideLoader();
+  // Simply navigate to the results page with search params;
+  // the CarRentalPlatform component will call the backend and load cars.
+  const handleSearch = () => {
+    const params = new URLSearchParams({
+      city: pickupLocation,
+      pickupDate,
+      returnDate,
+    });
+    navigate(`/all-car?${params.toString()}`);
   };
   return (
     <section className="relative bottom-20 min-h-screen bg-gradient-to-br from-red-500 via-blue-700 to-red-600 text-white overflow-hidden">

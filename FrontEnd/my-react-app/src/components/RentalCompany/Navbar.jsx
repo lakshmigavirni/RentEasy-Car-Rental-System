@@ -1,6 +1,6 @@
 import { Link, useLocation } from "react-router-dom";
 import { useState, useEffect } from "react";
-import { Car, Users, MessageSquare, DollarSign, Calendar, LogOut, Menu, X,BarChart3,Star,CreditCard } from 'lucide-react';
+import { Car, Users, MessageSquare, DollarSign, Calendar, LogOut, Menu, X, BarChart3, Star, CreditCard } from 'lucide-react';
 
 const Navbar = () => {
   const location = useLocation();
@@ -50,19 +50,19 @@ const Navbar = () => {
         <div className="container mx-auto px-4">
           <div className="flex items-center justify-between h-16  rounded-xl ">
             {/* Logo with Enhanced Styling */}
-            <Link to="/admin/dashboard" className="flex items-center space-x-3 group">
+            <Link to="/dashboard" className="flex items-center space-x-3 group">
               <div className="relative">
                 <div className="absolute inset-0 bg-white/20 rounded-full blur-sm group-hover:bg-white/30 transition-all duration-300"></div>
                 <Car className="relative h-8 w-8 text-red-500 drop-shadow-lg" />
               </div>
               <div className="hidden sm:block">
                 <span className="text-red-500 text-xl font-bold tracking-wide drop-shadow-md">
-                  SwiftRides
+                  RentEasy
                 </span>
-                
+
               </div>
               <span className="text-red-400 text-lg font-bold sm:hidden drop-shadow-md">
-                SwiftRides
+                RentEasy
               </span>
             </Link>
 
@@ -77,8 +77,8 @@ const Navbar = () => {
                     key={item.id}
                     to={item.path}
                     className={`group relative flex items-center space-x-3 px-4 py-2.5 rounded-xl transition-all duration-300 ${isActive
-                        ? "bg-white/20 text-red-500 shadow-lg backdrop-blur-sm"
-                        : "text-black/90 hover:bg-white/10 hover:text-red-400 hover:shadow-md"
+                      ? "bg-white/20 text-red-500 shadow-lg backdrop-blur-sm"
+                      : "text-black/90 hover:bg-white/10 hover:text-red-400 hover:shadow-md"
                       }`}
                     onClick={item.id === "logout" ? handleLogout : undefined}
                   >
@@ -102,8 +102,8 @@ const Navbar = () => {
                     to={item.path}
                     title={item.label}
                     className={`group relative flex items-center justify-center p-3 rounded-xl transition-all duration-300 ${isActive
-                        ? "bg-white/20 text-white shadow-lg backdrop-blur-sm"
-                        : "text-white/90 hover:bg-white/10 hover:text-white hover:shadow-md"
+                      ? "bg-white/20 text-white shadow-lg backdrop-blur-sm"
+                      : "text-white/90 hover:bg-white/10 hover:text-white hover:shadow-md"
                       }`}
                   >
                     <Icon className={`h-5 w-5 text-black transition-transform duration-300 ${isActive ? 'scale-110 text-red-500' : 'group-hover:scale-105'
@@ -179,8 +179,8 @@ const Navbar = () => {
                 to={item.path}
                 onClick={item.id === "logout" ? handleLogout : closeSidebar}
                 className={`group relative flex items-center space-x-4 px-4 py-4 rounded-xl transition-all duration-300 ${isActive
-                    ? "bg-white/20 text-white shadow-lg backdrop-blur-sm"
-                    : "text-white/90 hover:bg-white/10 hover:text-white hover:shadow-md"
+                  ? "bg-white/20 text-white shadow-lg backdrop-blur-sm"
+                  : "text-white/90 hover:bg-white/10 hover:text-white hover:shadow-md"
                   }`}
                 style={{ animationDelay: `${index * 50}ms` }}
               >

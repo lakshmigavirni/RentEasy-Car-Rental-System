@@ -30,5 +30,4 @@ public class SearchController {
 
         return searchService.search(keyword, city, category, maxRate, pickupDate, returnDate);
     }
-
 }

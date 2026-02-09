@@ -1,0 +1,3 @@
+[submodule "config-server/CarRentalConfigRepo"]
+	path = config-server/CarRentalConfigRepo
+	url = https://github.com/lakshmigavirni/CarRentalConfigRepo.git

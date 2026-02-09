@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Edit3, Trash2, User, Phone, TriangleAlert, MessageSquareText, Send, X, AlertTriangle } from 'lucide-react';
 import userImg from "../../../images/userImg.png"
+import url from "../../URL"
 
 const QueryCard = ({ query, onDelete, onAnswered }) => {
   const [answeropen, setAnswerOpen] = useState(false);
@@ -26,9 +27,9 @@ const QueryCard = ({ query, onDelete, onAnswered }) => {
           id: query.queryId,
           answer: message.trim(),
         };
-        const response = await fetch('http://localhost:9090/api/contact/answer', {
+        const response = await fetch(`${url}/api/contact/answer`, {
           method: 'POST',
-           headers: {
+          headers: {
             "Authorization": `Bearer ${token}`,
             "Content-Type": "application/json"
           },
@@ -95,7 +96,7 @@ const QueryCard = ({ query, onDelete, onAnswered }) => {
           <div className="relative z-10">
             <div className="flex justify-between items-start">
               <div>
-                <h3 className="text-white text-base sm:text-lg font-bold">Query #{ query.queryId}</h3>
+                <h3 className="text-white text-base sm:text-lg font-bold">Query #{query.queryId}</h3>
                 {query.createdAt && (
                   <div className="text-xs text-white/80 mt-1">{formatDate(query.createdAt)}</div>
                 )}
@@ -112,11 +113,11 @@ const QueryCard = ({ query, onDelete, onAnswered }) => {
           {/* Customer Info */}
           <div className="flex items-center gap-3 p-3 bg-red-50 rounded-lg border border-red-100">
             <div className="w-8 h-8 sm:w-10 sm:h-10 bg-red-500 rounded-full flex items-center justify-center flex-shrink-0">
-             <img
+              <img
                 src={userImg}
                 alt={query.name || 'Customer'}
                 className="w-14 h-14 rounded-full object-cover ring-2 ring-red-200 shadow-md"
-                />
+              />
             </div>
             <div className="min-w-0 flex-1">
               <p className="font-semibold text-gray-900 text-sm sm:text-base truncate">{query.name || '-'}</p>
@@ -133,16 +134,16 @@ const QueryCard = ({ query, onDelete, onAnswered }) => {
             <div className="flex items-start gap-3">
               <MessageSquareText className="w-5 h-5 sm:w-6 sm:h-6 text-red-500 flex-shrink-0 mt-0.5" />
               <span className="text-gray-700 text-sm sm:text-base break-words">{query.message || '-'}</span>
-            </div> 
-            {query.reply != null || query.answer != null ? ( 
+            </div>
+            {query.reply != null || query.answer != null ? (
               <>
                 <h4 className='my-2 sm:my-3 text-lg sm:text-2xl font-bold text-amber-800'>Your Answer</h4>
                 <div className="flex items-start gap-3">
                   <Send className="w-5 h-5 sm:w-6 sm:h-6 text-green-600 flex-shrink-0 mt-0.5" />
                   <span className="text-gray-700 text-sm sm:text-base break-words">{query.reply || query.answer}</span>
-                </div>  
+                </div>
               </>
-            ) : null}       
+            ) : null}
           </div>
         </div>
 

@@ -43,8 +43,8 @@
 //         const bookings = await bookingsRes.json();
 //         const payments = await paymentsRes.json();
 //         const queries = await queriesRes.json();
-      
-        
+
+
 
 //         setStatsData({
 //           totalCompanies: companies || 0,
@@ -540,6 +540,7 @@ import {
 } from "recharts"
 import Navbar from "./Navbar"
 import { useLoading } from "../Loader/LoadingProvider"
+import url from "../URL"
 
 const Dashboard = () => {
   const [statsData, setStatsData] = useState({
@@ -563,11 +564,11 @@ const Dashboard = () => {
       showLoader("Loading admin dashboard data...")
       try {
         const [companiesRes, customersRes, bookingsRes, paymentsRes, queriesRes] = await Promise.all([
-          fetch("http://localhost:9090/api/rental-company/total", { headers }),
-          fetch("http://localhost:9090/api/customers/total", { headers }),
-          fetch("http://localhost:9090/api/bookings/total", { headers }),
-          fetch("http://localhost:9090/api/payments/total-amount", { headers }),
-          fetch("http://localhost:9090/api/contact/total", { headers }),
+          fetch(`${url}/api/rental-company/total`, { headers }),
+          fetch(`${url}/api/customers/total`, { headers }),
+          fetch(`${url}/api/bookings/total`, { headers }),
+          fetch(`${url}/api/payments/total-amount`, { headers }),
+          fetch(`${url}/api/contact/total`, { headers }),
         ])
 
         const companies = await companiesRes.json()
@@ -580,7 +581,7 @@ const Dashboard = () => {
           totalCompanies: companies || 0,
           totalCustomers: customers || 0,
           totalBookings: bookings || 0,
-          totalRevenue: payments*0.25 || 0,
+          totalRevenue: (payments || 0) * 0.25,
           totalQueries: queries || 0,
         })
       } catch (error) {
@@ -715,35 +716,35 @@ const Dashboard = () => {
       value: statsData.totalCompanies,
       icon: <Car className="w-6 h-6" />,
       color: "from-red-500 to-red-600",
-      
+
     },
     {
       title: "Total Customers",
       value: statsData.totalCustomers.toLocaleString(),
       icon: <Users className="w-6 h-6" />,
       color: "from-red-600 to-red-700",
-      
+
     },
     {
       title: "Total Bookings",
       value: statsData.totalBookings.toLocaleString(),
       icon: <Calendar className="w-6 h-6" />,
       color: "from-red-700 to-red-800",
-      
+
     },
     {
       title: "Revenue Generated",
       value: `₹${statsData.totalRevenue.toLocaleString()}`,
       icon: <DollarSign className="w-6 h-6" />,
       color: "from-red-800 to-red-900",
-      
+
     },
     {
       title: "Customer Queries",
       value: statsData.totalQueries,
       icon: <MessageSquare className="w-6 h-6" />,
       color: "from-red-500 to-red-600",
-      
+
     },
   ]
 
@@ -781,7 +782,7 @@ const Dashboard = () => {
         {/* Header */}
         <motion.div variants={itemVariants} className="text-center mb-8">
           <h1 className="text-4xl font-bold bg-gradient-to-r from-red-600 to-red-800 bg-clip-text text-transparent">
-            SwiftRides Dashboard
+            RentEasy Dashboard
           </h1>
           <p className="text-gray-600 mt-2">Monitor your business performance in real-time</p>
         </motion.div>
@@ -804,7 +805,7 @@ const Dashboard = () => {
                   <div className={`p-3 rounded-xl bg-gradient-to-br ${stat.color} text-white shadow-lg`}>
                     {stat.icon}
                   </div>
-   
+
                 </div>
                 <div>
                   <p className="text-sm font-medium text-gray-600 mb-1">{stat.title}</p>
@@ -900,7 +901,7 @@ const Dashboard = () => {
           </motion.div> */}
 
           {/* Performance Metrics Line Chart */}
-         {/* <motion.div variants={itemVariants} className="bg-white rounded-xl shadow-lg p-6">
+          {/* <motion.div variants={itemVariants} className="bg-white rounded-xl shadow-lg p-6">
             <div className="flex items-center gap-2 mb-6">
               <Activity className="w-5 h-5 text-red-600" />
               <h3 className="text-lg font-semibold text-gray-800">Performance Metrics</h3>

@@ -24,7 +24,7 @@ export default function Payments() {
         const token = localStorage.getItem("token")
         const email = localStorage.getItem("email")
         // 1. Get companyId from email
-        const resId = await fetch("http://localhost:8084/auth/user/email", {
+        const resId = await fetch("http://localhost:9090/auth/user/email", {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
@@ -39,7 +39,7 @@ export default function Payments() {
         if (!res.ok) throw new Error("Failed to fetch payments")
         const paymentData = await res.json()
         paymentData.forEach(payment => {
-          payment.amount = payment.amount*0.75
+          payment.amount = payment.amount * 0.75
         })
         setPayments(paymentData)
       } catch (err) {

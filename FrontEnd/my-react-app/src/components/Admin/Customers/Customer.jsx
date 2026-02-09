@@ -11,7 +11,7 @@ export default function Bookings() {
   const [filterStatus, setFilterStatus] = useState("all")
   const [currentPage, setCurrentPage] = useState(1)
   const [itemsPerPage, setItemsPerPage] = useState(25)
-  const { showLoader , hideLoader} = useLoading();
+  const { showLoader, hideLoader } = useLoading();
   const [customers, setCustomers] = useState([]);
   const token = localStorage.getItem("token"); // Replace with your actual token
   const email = localStorage.getItem("email");
@@ -59,7 +59,7 @@ export default function Bookings() {
       if (response.ok) {
         // Get the updated customer data from the response
         const updatedCustomer = await response.json();
-        
+
         // Update the local state with the server response
         setCustomers((prev) =>
           prev.map((customer) =>
@@ -77,7 +77,7 @@ export default function Bookings() {
     }
   }
 
-  
+
 
   const filterOptions = [
     { value: "all", label: "All Customer" },
@@ -98,7 +98,7 @@ export default function Bookings() {
   const endIndex = startIndex + itemsPerPage
   const currentCustomers = filteredCustomers.slice(startIndex, endIndex)
 
-  
+
 
   const handleItemsPerPageChange = (newItemsPerPage) => {
     setItemsPerPage(newItemsPerPage)
@@ -107,7 +107,7 @@ export default function Bookings() {
 
   return (
     <div className="space-y-6">
-        <Navbar />
+      <Navbar />
       <div className="flex items-center justify-between mx-5">
         <h1 className="text-3xl font-bold text-gray-900">Customer Management</h1>
         <div className="text-sm text-gray-500">Total Happy Customers: {customers.length}</div>
@@ -123,38 +123,38 @@ export default function Bookings() {
       />
 
       <ItemsPerPageSelector
-          itemsPerPage={itemsPerPage}
-          onItemsPerPageChange={handleItemsPerPageChange}
-        />
+        itemsPerPage={itemsPerPage}
+        onItemsPerPageChange={handleItemsPerPageChange}
+      />
 
 
-       {currentCustomers.length === 0 ? (
-          <div className="text-center py-12 mx-5">
-            <div className="text-gray-500 text-lg">
-              {filteredCustomers.length === 0 ? "No Customers found matching your criteria" : "Loading..."}
-            </div>
+      {currentCustomers.length === 0 ? (
+        <div className="text-center py-12 mx-5">
+          <div className="text-gray-500 text-lg">
+            {filteredCustomers.length === 0 ? "No Customers found matching your criteria" : "Loading..."}
           </div>
-        ) : (
-          <>
-            <div className="grid grid-cols-1 min-[890px]:grid-cols-2 min-[1300px]:grid-cols-3 min-[1720px]:grid-cols-4 gap-4 sm:gap-6 mx-5">
-              {currentCustomers.map((customer) => (
-                <CustomerCard 
-                  key={customer.customerId} 
-                  customer={customer} 
-                  onApprove={handleApprove}
-                />
-              ))}
-            </div>
+        </div>
+      ) : (
+        <>
+          <div className="grid grid-cols-1 min-[890px]:grid-cols-2 min-[1300px]:grid-cols-3 min-[1720px]:grid-cols-4 gap-4 sm:gap-6 mx-5">
+            {currentCustomers.map((customer) => (
+              <CustomerCard
+                key={customer.customerId}
+                customer={customer}
+                onApprove={handleApprove}
+              />
+            ))}
+          </div>
 
-            <Pagination
-              currentPage={currentPage}
-              totalPages={totalPages}
-              onPageChange={setCurrentPage}
-              totalItems={filteredCustomers.length}
-              itemsPerPage={itemsPerPage}
-            />
-          </>
-        )}
-      </div>
+          <Pagination
+            currentPage={currentPage}
+            totalPages={totalPages}
+            onPageChange={setCurrentPage}
+            totalItems={filteredCustomers.length}
+            itemsPerPage={itemsPerPage}
+          />
+        </>
+      )}
+    </div>
   )
 }
