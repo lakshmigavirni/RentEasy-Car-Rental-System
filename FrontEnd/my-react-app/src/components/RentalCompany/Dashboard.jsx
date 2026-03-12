@@ -17,97 +17,123 @@ export default function Dashboard() {
     const fetchStats = async () => {
       showLoader("Loading dashboard data...")
       try {
-        const resId = await fetch(`${url}/auth/user/email`, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
-          body: JSON.stringify({ email }),
-        })
+        // Step 1: Get the companyId - try by email first, fallback to userId
+        let id = null
+        try {
+          const companyRes = await fetch(`${url}/api/rental-company/email/${email}`, {
+            method: "GET",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${token}`,
+            },
+          })
+          if (companyRes.ok) {
+            const companyData = await companyRes.json()
+            id = companyData.companyId
+          }
+        } catch (e) {
+          console.warn("Failed to fetch company by email, trying fallback:", e)
+        }
 
-        const id = await resId.json()
-
-        const res = await fetch(`${url}/api/reviews/companyId/${id}`, {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        })
-
-        const reviewsData = await res.json()
-
-        const enrichedReviews = await Promise.all(
-          reviewsData.map(async (review) => {
-            const [carRes, customerRes] = await Promise.all([
-              fetch(`${url}/api/cars/${review.carId}`, {
-                headers: {
-                  Authorization: `Bearer ${token}`,
-                },
-              }).then((res) => res.json()),
-              fetch(`${url}/api/customers/${review.customerId}`, {
-                headers: {
-                  Authorization: `Bearer ${token}`,
-                },
-              }).then((res) => res.json()),
-            ])
-
-            return {
-              id: review.reviewId,
-              customerName: customerRes.fullName,
-              carName: `${carRes.make} ${carRes.model}`,
-              rating: review.rating,
-              comment: review.comment,
-              date: new Date(review.createdAt).toISOString().split("T")[0],
-              customerAvatar: "/placeholder.svg?height=40&width=40",
+        // Fallback: get userId from auth service
+        if (id === null) {
+          try {
+            const resId = await fetch(`${url}/auth/user/email`, {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+                Authorization: `Bearer ${token}`,
+              },
+              body: JSON.stringify({ email }),
+            })
+            if (resId.ok) {
+              id = await resId.json()
             }
-          }),
-        )
+          } catch (e) {
+            console.error("Failed to get userId as fallback:", e)
+          }
+        }
+
+        if (id === null) {
+          throw new Error("Could not determine company ID")
+        }
+
+        // Step 2: Fetch reviews for the company
+        let reviewsData = []
+        try {
+          const res = await fetch(`${url}/api/reviews/companyId/${id}`, {
+            headers: { Authorization: `Bearer ${token}` },
+          })
+          if (res.ok) {
+            const data = await res.json()
+            reviewsData = Array.isArray(data) ? data : []
+          }
+        } catch (e) {
+          console.warn("Failed to fetch reviews:", e)
+        }
+
         const averageRating =
           reviewsData.length > 0
-            ? reviewsData.reduce((sum, reviewsData) => sum + reviewsData.rating, 0) / reviewsData.length
+            ? reviewsData.reduce((sum, r) => sum + r.rating, 0) / reviewsData.length
             : 0
 
-        const paymentsRes = await fetch(`${url}/api/payments/company/${id}`, {
-          method: "GET",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
-        }).then((res) => res.json())
-
-        const overallRevenue = paymentsRes
-          .filter(payment => payment.status === "COMPLETED")
-          .reduce((sum, payment) => sum + Number(payment.amount), 0);
-
-        const [carsRes, bookingsRes, reviewsRes, ratingRes, customersRes] = await Promise.all([
-          fetch(`${url}/api/cars/total/companyId/${id}`, {
+        // Step 3: Fetch payments for the company
+        let overallRevenue = 0
+        try {
+          const paymentsRes = await fetch(`${url}/api/payments/company/${id}`, {
             method: "GET",
             headers: {
               "Content-Type": "application/json",
               Authorization: `Bearer ${token}`,
             },
-          }).then((res) => (res.ok ? res.json() : Promise.reject("Total Cars fetch failed"))),
+          })
+          if (paymentsRes.ok) {
+            const paymentsData = await paymentsRes.json()
+            overallRevenue = (Array.isArray(paymentsData) ? paymentsData : [])
+              .filter(payment => payment.status === "COMPLETED")
+              .reduce((sum, payment) => sum + Number(payment.amount), 0)
+          }
+        } catch (e) {
+          console.warn("Failed to fetch payments:", e)
+        }
 
-          fetch(`${url}/api/cars/count/status/booked`, {
+        // Step 4: Fetch total cars, active bookings, and total customers
+        let carsRes = 0
+        let bookingsRes = 0
+        let customersRes = 0
+
+        try {
+          const res = await fetch(`${url}/api/cars/total/companyId/${id}`, {
             method: "GET",
-            headers: {
-              "Content-Type": "application/json",
-              Authorization: `Bearer ${token}`,
-            },
-          }).then((res) => (res.ok ? res.json() : Promise.reject("Bookings fetch failed"))),
+            headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+          })
+          if (res.ok) carsRes = await res.json()
+        } catch (e) {
+          console.warn("Failed to fetch total cars:", e)
+        }
 
-          reviewsData.length,
-
-          averageRating,
-
-          fetch(`${url}/api/bookings/companyId/${id}/bookingCustomers`, {
+        try {
+          const res = await fetch(`${url}/api/cars/count/status/booked`, {
             method: "GET",
-            headers: {
-              "Content-Type": "application/json",
-              Authorization: `Bearer ${token}`,
-            },
-          }).then((res) => res.json()),
-        ])
+            headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+          })
+          if (res.ok) bookingsRes = await res.json()
+        } catch (e) {
+          console.warn("Failed to fetch active bookings:", e)
+        }
+
+        try {
+          const res = await fetch(`${url}/api/bookings/companyId/${id}/bookingCustomers`, {
+            method: "GET",
+            headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+          })
+          if (res.ok) customersRes = await res.json()
+        } catch (e) {
+          console.warn("Failed to fetch total customers:", e)
+        }
+
+        const reviewsRes = reviewsData.length
+        const ratingRes = averageRating
 
         setStats([
           {

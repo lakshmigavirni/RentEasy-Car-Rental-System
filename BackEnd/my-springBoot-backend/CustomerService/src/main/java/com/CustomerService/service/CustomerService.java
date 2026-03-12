@@ -35,5 +35,7 @@ public interface CustomerService {
 
     Customer updateCustomerStatus(Integer customerId, String status);
 
+    Customer updateAadhaarStatus(Integer customerId, String aadhaarStatus);
+
 }
 

@@ -8,4 +8,5 @@ import java.util.List;
 public interface RentalCompanyRepo extends JpaRepository<RentalCompany,Integer> {
     List<RentalCompany> findByCityIgnoreCase(String city);
 
+    RentalCompany findByEmail(String email);
 }

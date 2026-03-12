@@ -35,5 +35,7 @@ public interface RentalCompanyService {
 
     ResponseEntity<List<ReviewDto>> getAllReviewsById(int id);
 
+    RentalCompany getRentalCompanyByEmail(String email);
+
     Long getCountOfComaponies();
 }

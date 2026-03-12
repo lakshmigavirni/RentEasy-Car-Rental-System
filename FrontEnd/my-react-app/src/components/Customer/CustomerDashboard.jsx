@@ -70,6 +70,7 @@ const Dashboard = () => {
   const [selectedBookingForDetails, setSelectedBookingForDetails] =
     useState(null);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
+  const [paymentConfirm, setPaymentConfirm] = useState(null); // booking awaiting payment confirmation
 
   const [licenseForm, setLicenseForm] = useState({
     drivingLicenseNumber: "",
@@ -86,6 +87,23 @@ const Dashboard = () => {
 
   const [showSelfieStep, setShowSelfieStep] = useState(false);
   const [licenseSaved, setLicenseSaved] = useState(false);
+
+  // Aadhaar verification states
+  const [aadhaarForm, setAadhaarForm] = useState({
+    aadhaarNumber: "",
+    aadhaarImage: null,
+    aadhaarImagePreview: null,
+  });
+  const [isEditingAadhaar, setIsEditingAadhaar] = useState(false);
+
+  const [aadhaarSelfieForm, setAadhaarSelfieForm] = useState({
+    selfieImage: null,
+    selfieImagePreview: null,
+    selfieImageUrl: null,
+  });
+
+  const [showAadhaarSelfieStep, setShowAadhaarSelfieStep] = useState(false);
+  const [aadhaarSaved, setAadhaarSaved] = useState(false);
 
   const token = localStorage.getItem("token");
   const email = localStorage.getItem("email");
@@ -516,8 +534,9 @@ const Dashboard = () => {
   };
 
   const handlePayAndBook = async (booking) => {
+    setPaymentConfirm(null); // close confirmation modal
     try {
-      showLoader("Redirecting to payment...");
+      showLoader("Processing payment...");
       const paymentPayload = {
         bookingId: Number(booking.bookingId),
         companyId: Number(booking.companyID),
@@ -541,13 +560,22 @@ const Dashboard = () => {
         throw new Error("Failed to initiate payment session");
       }
 
-      const paymentData = await paymentResponse.json();
-      const redirectUrl = paymentData.checkoutUrl;
-      window.location.href = redirectUrl;
+      // Payment succeeded — refresh bookings and show success alert
+      const id = localStorage.getItem("customerId") || customerId;
+      const refreshed = await fetch(`${url}/api/customers/${id}/booking`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (refreshed.ok) {
+        const data = await refreshed.json();
+        setBookings(data);
+      }
+      alert("✅ Payment for booking is successful!");
     } catch (error) {
       hideLoader();
       alert("Payment initiation failed. Please try again.");
       console.error(error);
+    } finally {
+      hideLoader();
     }
   };
 
@@ -648,6 +676,124 @@ const Dashboard = () => {
       }
     } catch (error) {
       alert("Verification failed.");
+    }
+  };
+
+  // ── Aadhaar handlers ──────────────────────────────────────────────────────
+
+  const handleAadhaarImageChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      setAadhaarForm({
+        ...aadhaarForm,
+        aadhaarImage: file,
+        aadhaarImagePreview: URL.createObjectURL(file),
+      });
+    } else {
+      setAadhaarForm({
+        ...aadhaarForm,
+        aadhaarImage: null,
+        aadhaarImagePreview: null,
+      });
+    }
+  };
+
+  const handleAadhaarSave = async () => {
+    const rawNumber = aadhaarForm.aadhaarNumber.trim().replaceAll(" ", "");
+    if (!rawNumber || !/^\d{12}$/.test(rawNumber)) {
+      alert("Please enter a valid 12-digit Aadhaar number.");
+      return;
+    }
+
+    showLoader("Updating Aadhaar...");
+    try {
+      let imageUrl = profile?.aadhaarImg || null;
+      if (aadhaarForm.aadhaarImage) {
+        const cloudinaryResponse = await uploadToCloudinary(
+          aadhaarForm.aadhaarImage,
+          "image"
+        );
+        if (!cloudinaryResponse) {
+          hideLoader();
+          alert("Failed to upload image. Please try again.");
+          return;
+        }
+        imageUrl = cloudinaryResponse;
+      }
+
+      const updatedResponse = await fetch(`${url}/api/customers/${customerId}`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          ...profile,
+          aadhaarNumber: rawNumber,
+          aadhaarImg: imageUrl,
+        }),
+      });
+
+      if (!updatedResponse.ok) {
+        throw new Error("Failed to update Aadhaar information.");
+      }
+
+      const newProfile = await updatedResponse.json();
+      setProfile(newProfile);
+      setIsEditingAadhaar(false);
+      setAadhaarForm({ aadhaarNumber: "", aadhaarImage: null, aadhaarImagePreview: null });
+      setAadhaarSaved(true);
+      setShowAadhaarSelfieStep(true);
+      alert("Aadhaar information updated! Now upload a selfie for verification.");
+    } catch (error) {
+      alert("Failed to update Aadhaar. Please try again.");
+    } finally {
+      hideLoader();
+    }
+  };
+
+  const handleAadhaarSelfieImageChange = async (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      setAadhaarSelfieForm({
+        ...aadhaarSelfieForm,
+        selfieImage: file,
+        selfieImagePreview: URL.createObjectURL(file),
+      });
+      showLoader("Uploading selfie...");
+      try {
+        const uploadedUrl = await uploadToCloudinary(file, "image");
+        setAadhaarSelfieForm((prev) => ({ ...prev, selfieImageUrl: uploadedUrl }));
+        if (uploadedUrl && profile?.aadhaarImg && profile?.aadhaarNumber) {
+          const updateRes = await fetch(`${url}/api/customers/${customerId}`, {
+            method: "PUT",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${token}`,
+            },
+            body: JSON.stringify({
+              ...profile,
+              aadhaarSelfieImg: uploadedUrl,
+              aadhaarStatus: "pending",
+            }),
+          });
+          if (updateRes.ok) {
+            const newProfile = await updateRes.json();
+            setProfile(newProfile);
+            setShowAadhaarSelfieStep(false);
+            setAadhaarSelfieForm({ selfieImage: null, selfieImagePreview: null, selfieImageUrl: null });
+            alert("Documents uploaded successfully! Your Aadhaar is now pending admin verification.");
+          } else {
+            alert("Failed to save. Please try again.");
+          }
+        }
+      } catch (error) {
+        alert("Upload failed. Please try again.");
+      } finally {
+        hideLoader();
+      }
+    } else {
+      setAadhaarSelfieForm({ selfieImage: null, selfieImagePreview: null, selfieImageUrl: null });
     }
   };
 
@@ -784,7 +930,8 @@ const Dashboard = () => {
               {[
                 { id: "bookings", label: "My Bookings", icon: Calendar },
                 { id: "profile", label: "Profile", icon: Settings },
-                { id: "license", label: "Driving License", icon: User }, // Add this new tab
+                { id: "license", label: "Driving License", icon: User },
+                { id: "aadhaar", label: "Aadhaar Card", icon: Award },
                 { id: "comment", label: "My Reviews", icon: MessageSquare },
               ].map((tab) => (
                 <motion.button
@@ -973,6 +1120,17 @@ const Dashboard = () => {
                             >
                               <Edit3 className="w-4 h-4" />
                               <span>Update Review</span>
+                            </motion.button>
+                          )}
+                          {booking.status.toLowerCase() === "pending" && (
+                            <motion.button
+                              whileHover={{ scale: 1.05 }}
+                              whileTap={{ scale: 0.95 }}
+                              onClick={() => setPaymentConfirm(booking)}
+                              className="flex items-center justify-center space-x-1 px-4 py-2 bg-gradient-to-r from-emerald-500 to-green-600 text-white text-sm font-medium rounded-lg hover:from-emerald-600 hover:to-green-700 transition-all duration-200 shadow-lg shadow-green-500/25"
+                            >
+                              <span>💳</span>
+                              <span>Pay Now</span>
                             </motion.button>
                           )}
 
@@ -1679,6 +1837,360 @@ const Dashboard = () => {
             </motion.div>
           )}
 
+          {activeTab === "aadhaar" && (
+            <motion.div
+              key="aadhaar"
+              variants={tabVariants}
+              initial="hidden"
+              animate="visible"
+              exit="exit"
+              className="max-w-4xl mx-auto"
+            >
+              <motion.div
+                variants={itemVariants}
+                className="bg-white/80 backdrop-blur-md rounded-2xl shadow-lg border border-red-100/50 overflow-hidden"
+              >
+                {/* Aadhaar Header */}
+                <div className="relative px-6 py-8 bg-gradient-to-r from-blue-500 via-indigo-500 to-blue-600 text-white overflow-hidden">
+                  <div className="absolute inset-0 bg-black/10"></div>
+                  <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full -translate-y-32 translate-x-32"></div>
+                  <div className="absolute bottom-0 left-0 w-48 h-48 bg-white/10 rounded-full translate-y-24 -translate-x-24"></div>
+                  <div className="relative z-10 flex flex-col sm:flex-row sm:justify-between sm:items-center space-y-4 sm:space-y-0">
+                    <div className="flex flex-col sm:flex-row sm:items-center space-y-4 sm:space-y-0 sm:space-x-6">
+                      <motion.div
+                        whileHover={{ scale: 1.05 }}
+                        className="w-20 h-20 bg-white/20 backdrop-blur-sm rounded-2xl flex items-center justify-center border border-white/30 mx-auto sm:mx-0"
+                      >
+                        <Award className="w-10 h-10 text-white" />
+                      </motion.div>
+                      <div className="text-center sm:text-left p-2">
+                        <h2 className="text-2xl sm:text-3xl font-bold mb-2">Aadhaar Card</h2>
+                        <p className="text-white/80">Upload and verify your Aadhaar card details</p>
+                      </div>
+                    </div>
+                    {!isEditingAadhaar && (
+                      <motion.button
+                        whileHover={{ scale: 1.05 }}
+                        whileTap={{ scale: 0.95 }}
+                        onClick={() => {
+                          if (profile?.aadhaarStatus === "verified") return;
+                          setAadhaarForm({
+                            aadhaarNumber: profile?.aadhaarNumber || "",
+                            aadhaarImage: null,
+                            aadhaarImagePreview: null,
+                          });
+                          setIsEditingAadhaar(true);
+                        }}
+                        disabled={profile?.aadhaarStatus === "verified"}
+                        className={`flex items-center justify-center space-x-2 px-6 py-3 rounded-xl font-medium transition-all duration-200 border w-fit mx-auto sm:mx-0 ${profile?.aadhaarStatus === "verified"
+                          ? "bg-gray-100 text-gray-400 border-gray-200 cursor-not-allowed"
+                          : "bg-white/20 backdrop-blur-sm text-white hover:bg-white/30 border-white/30"
+                          }`}
+                      >
+                        <Edit3 className="h-5 w-5" />
+                        <span className="font-medium">
+                          {profile?.aadhaarStatus === "verified" ? "Aadhaar Verified" : "Update Aadhaar"}
+                        </span>
+                      </motion.button>
+                    )}
+                  </div>
+                </div>
+
+                {/* Aadhaar Content */}
+                <div className="p-8">
+                  {/* Verified Notice */}
+                  {profile?.aadhaarStatus === "verified" && (
+                    <motion.div
+                      initial={{ opacity: 0, y: -10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      className="mb-6 bg-gradient-to-r from-green-50 to-emerald-50 border border-green-200 rounded-xl p-4"
+                    >
+                      <div className="flex items-center space-x-3">
+                        <div className="w-8 h-8 bg-green-500 rounded-lg flex items-center justify-center">
+                          <CheckCircle className="w-4 h-4 text-white" />
+                        </div>
+                        <div>
+                          <h3 className="font-semibold text-green-900">Aadhaar Verified</h3>
+                          <p className="text-sm text-green-700">
+                            Your Aadhaar card has been verified. No further changes are allowed.
+                          </p>
+                        </div>
+                      </div>
+                    </motion.div>
+                  )}
+
+                  <div className="grid md:grid-cols-2 gap-8">
+                    {/* Left Column – Aadhaar Number & Status */}
+                    <div className="space-y-6">
+                      <motion.div
+                        initial={{ opacity: 0, x: -20 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        transition={{ delay: 0.1 }}
+                      >
+                        <label className="block text-sm font-semibold text-gray-700 mb-3 flex items-center space-x-2">
+                          <Award className="w-4 h-4 text-blue-500" />
+                          <span>Aadhaar Number</span>
+                        </label>
+                        {isEditingAadhaar ? (
+                          <motion.input
+                            initial={{ scale: 0.95 }}
+                            animate={{ scale: 1 }}
+                            type="text"
+                            inputMode="numeric"
+                            maxLength={12}
+                            value={aadhaarForm.aadhaarNumber}
+                            onChange={(e) =>
+                              setAadhaarForm({
+                                ...aadhaarForm,
+                                aadhaarNumber: e.target.value.replace(/\D/g, ""),
+                              })
+                            }
+                            disabled={profile?.aadhaarStatus === "verified"}
+                            className={`w-full px-4 py-4 border-2 rounded-xl focus:ring-2 focus:border-blue-500 transition-all duration-200 shadow-sm tracking-widest ${profile?.aadhaarStatus === "verified"
+                              ? "border-gray-200 bg-gray-100 text-gray-500 cursor-not-allowed"
+                              : "border-gray-200 bg-white focus:ring-blue-500"
+                              }`}
+                            placeholder="Enter 12-digit Aadhaar number"
+                          />
+                        ) : (
+                          <div className="px-4 py-4 bg-gradient-to-r from-gray-50 to-gray-100 rounded-xl text-gray-900 border-2 border-gray-200 font-medium tracking-widest">
+                            {profile?.aadhaarNumber
+                              ? profile.aadhaarNumber.replace(/(\d{4})(?=\d)/g, "$1 ")
+                              : "Not provided"}
+                          </div>
+                        )}
+                      </motion.div>
+
+                      {/* Aadhaar Status */}
+                      <motion.div
+                        initial={{ opacity: 0, x: -20 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        transition={{ delay: 0.2 }}
+                        className={`rounded-xl p-4 ${profile?.aadhaarStatus === "verified"
+                          ? "bg-gradient-to-r from-green-50 to-emerald-50 border border-green-200"
+                          : profile?.aadhaarStatus === "Rejected"
+                            ? "bg-gradient-to-r from-red-50 to-rose-50 border border-red-200"
+                            : "bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200"
+                          }`}
+                      >
+                        <div className="flex items-center space-x-3">
+                          <div
+                            className={`w-10 h-10 rounded-lg flex items-center justify-center ${profile?.aadhaarStatus === "verified"
+                              ? "bg-green-500"
+                              : profile?.aadhaarStatus === "Rejected"
+                                ? "bg-red-500"
+                                : "bg-blue-500"
+                              }`}
+                          >
+                            {profile?.aadhaarStatus === "verified" ? (
+                              <CheckCircle className="w-5 h-5 text-white" />
+                            ) : profile?.aadhaarStatus === "Rejected" ? (
+                              <XCircle className="w-5 h-5 text-white" />
+                            ) : (
+                              <AlertCircle className="w-5 h-5 text-white" />
+                            )}
+                          </div>
+                          <div>
+                            <h3 className="font-semibold text-gray-900">Aadhaar Status</h3>
+                            <p
+                              className={`text-sm ${profile?.aadhaarStatus === "verified"
+                                ? "text-green-700"
+                                : profile?.aadhaarStatus === "Rejected"
+                                  ? "text-red-700"
+                                  : "text-blue-700"
+                                }`}
+                            >
+                              {profile?.aadhaarStatus === "verified"
+                                ? "Verified"
+                                : profile?.aadhaarStatus === "Rejected"
+                                  ? "Rejected"
+                                  : (profile?.aadhaarStatus === "pending" || profile?.aadhaarStatus === "PENDING")
+                                    ? "Waiting for Verification"
+                                    : "Pending Verification"}
+                            </p>
+                            {profile?.aadhaarStatus === "Rejected" && (
+                              <p className="text-xs text-red-600 mt-1">
+                                Your Aadhaar was rejected. Please re-upload and try again.
+                              </p>
+                            )}
+                            {(profile?.aadhaarStatus === "pending" || profile?.aadhaarStatus === "PENDING") && (
+                              <p className="text-xs text-amber-600 mt-1">
+                                Waiting for admin verification. Your documents have been submitted.
+                              </p>
+                            )}
+                            {profile?.aadhaarStatus !== "verified" &&
+                              profile?.aadhaarStatus !== "Rejected" &&
+                              profile?.aadhaarStatus !== "pending" &&
+                              profile?.aadhaarStatus !== "PENDING" && (
+                                <p className="text-xs text-blue-600 mt-1">
+                                  Upload your Aadhaar image and selfie to complete verification.
+                                </p>
+                              )}
+                          </div>
+                        </div>
+                      </motion.div>
+                    </div>
+
+                    {/* Right Column – Aadhaar Image */}
+                    <motion.div
+                      initial={{ opacity: 0, x: 20 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ delay: 0.3 }}
+                      className="flex flex-col items-center justify-center space-y-4"
+                    >
+                      {/* Show existing Aadhaar image if available */}
+                      {profile?.aadhaarImg && !isEditingAadhaar && (
+                        <div className="w-full max-w-md">
+                          <div className="bg-gradient-to-r from-green-50 to-emerald-50 border border-green-200 rounded-xl p-4 mb-4">
+                            <div className="flex items-center space-x-3 mb-3">
+                              <div className="w-8 h-8 bg-green-500 rounded-lg flex items-center justify-center">
+                                <CheckCircle className="w-4 h-4 text-white" />
+                              </div>
+                              <span className="font-semibold text-green-900">Current Aadhaar Image</span>
+                            </div>
+                            <img
+                              src={profile.aadhaarImg}
+                              alt="Current Aadhaar Card"
+                              className="w-full h-auto rounded-xl shadow-lg border border-gray-200"
+                            />
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Upload area */}
+                      {(!profile?.aadhaarImg || isEditingAadhaar) && (
+                        <label
+                          htmlFor="aadhaar-upload"
+                          className={`w-full max-w-md border-2 border-dashed rounded-xl p-6 flex flex-col items-center justify-center transition-all duration-200 ${profile?.aadhaarStatus === "verified"
+                            ? "bg-gray-100 border-gray-300 cursor-not-allowed"
+                            : "bg-gray-50 border-gray-200 cursor-pointer hover:border-blue-400 hover:bg-blue-50"
+                            }`}
+                        >
+                          <UploadCloud
+                            className={`w-12 h-12 mb-3 ${profile?.aadhaarStatus === "verified" ? "text-gray-400" : "text-gray-400"
+                              }`}
+                          />
+                          <span
+                            className={`font-semibold text-center ${profile?.aadhaarStatus === "verified" ? "text-gray-500" : "text-gray-700"
+                              }`}
+                          >
+                            {profile?.aadhaarStatus === "verified"
+                              ? "Aadhaar Image Verified"
+                              : profile?.aadhaarImg
+                                ? "Update Aadhaar Card Image"
+                                : "Upload Aadhaar Card Image"}
+                          </span>
+                          <p
+                            className={`text-sm text-center mt-1 ${profile?.aadhaarStatus === "verified" ? "text-gray-400" : "text-gray-500"
+                              }`}
+                          >
+                            {profile?.aadhaarStatus === "verified"
+                              ? "Cannot be changed"
+                              : "Drag & drop or click to upload (front side)"}
+                          </p>
+                          <input
+                            type="file"
+                            accept="image/*"
+                            onChange={handleAadhaarImageChange}
+                            disabled={profile?.aadhaarStatus === "verified"}
+                            className="hidden"
+                            id="aadhaar-upload"
+                          />
+                        </label>
+                      )}
+
+                      {/* New image preview */}
+                      {isEditingAadhaar && aadhaarForm.aadhaarImagePreview && (
+                        <div className="mt-4 w-full max-w-md">
+                          <div className="bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-xl p-4">
+                            <div className="flex items-center space-x-3 mb-3">
+                              <div className="w-8 h-8 bg-blue-500 rounded-lg flex items-center justify-center">
+                                <Camera className="w-4 h-4 text-white" />
+                              </div>
+                              <span className="font-semibold text-blue-900">New Image Preview</span>
+                            </div>
+                            <img
+                              src={aadhaarForm.aadhaarImagePreview}
+                              alt="New Aadhaar Card Preview"
+                              className="w-full h-auto rounded-xl shadow-lg border border-gray-200"
+                            />
+                          </div>
+                        </div>
+                      )}
+                    </motion.div>
+                  </div>
+
+                  {/* Action Buttons for Aadhaar */}
+                  {isEditingAadhaar && !showAadhaarSelfieStep && (
+                    <motion.div
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: 0.4 }}
+                      className="mt-8 pt-6 border-t border-gray-200"
+                    >
+                      <div className="flex flex-col sm:flex-row justify-center space-y-4 sm:space-y-0 sm:space-x-4">
+                        <motion.button
+                          whileHover={{ scale: 1.05 }}
+                          whileTap={{ scale: 0.95 }}
+                          onClick={handleAadhaarSave}
+                          className="flex items-center justify-center space-x-3 px-8 py-4 bg-gradient-to-r from-blue-500 to-indigo-500 text-white rounded-xl hover:from-blue-600 hover:to-indigo-600 transition-all duration-200 shadow-lg shadow-blue-500/25 font-medium"
+                        >
+                          <Save className="h-5 w-5" />
+                          <span>Save Aadhaar Info</span>
+                        </motion.button>
+                        <motion.button
+                          whileHover={{ scale: 1.05 }}
+                          whileTap={{ scale: 0.95 }}
+                          onClick={() => setIsEditingAadhaar(false)}
+                          className="flex items-center justify-center space-x-3 px-8 py-4 bg-gradient-to-r from-gray-500 to-slate-500 text-white rounded-xl hover:from-gray-600 hover:to-slate-600 transition-all duration-200 shadow-lg shadow-gray-500/25 font-medium"
+                        >
+                          <X className="h-5 w-5" />
+                          <span>Cancel</span>
+                        </motion.button>
+                      </div>
+                    </motion.div>
+                  )}
+
+                  {/* Selfie Upload Step for Aadhaar - only show when docs not yet submitted for verification */}
+                  {showAadhaarSelfieStep &&
+                    profile?.aadhaarStatus !== "pending" &&
+                    profile?.aadhaarStatus !== "PENDING" &&
+                    profile?.aadhaarStatus !== "verified" && (
+                      <div className="flex flex-col items-center mt-8">
+                        <label
+                          htmlFor="aadhaar-selfie-upload"
+                          className="w-full max-w-md border-2 border-dashed rounded-xl p-6 flex flex-col items-center justify-center transition-all duration-200 bg-gray-50 border-gray-200 cursor-pointer hover:border-blue-400 hover:bg-blue-50 mt-4"
+                        >
+                          <Camera className="w-12 h-12 mb-3 text-gray-400" />
+                          <span className="font-semibold text-gray-700">Upload Selfie</span>
+                          <p className="text-sm text-gray-500 mt-1">Drag & drop or click to upload</p>
+                          <input
+                            type="file"
+                            accept="image/*"
+                            onChange={handleAadhaarSelfieImageChange}
+                            className="hidden"
+                            id="aadhaar-selfie-upload"
+                          />
+                        </label>
+                        {aadhaarSelfieForm.selfieImagePreview && (
+                          <div className="mt-4 w-full max-w-md">
+                            <img
+                              src={aadhaarSelfieForm.selfieImagePreview}
+                              alt="Aadhaar Selfie Preview"
+                              className="w-full h-auto rounded-xl shadow-lg border border-gray-200"
+                            />
+                          </div>
+                        )}
+                        <p className="mt-2 text-amber-600 font-semibold">
+                          After uploading your selfie, your documents will be submitted for admin verification.
+                        </p>
+                      </div>
+                    )}
+                </div>
+              </motion.div>
+            </motion.div>
+          )}
+
           {activeTab === "comment" && (
             <motion.div
               key="comment"
@@ -2265,7 +2777,7 @@ const Dashboard = () => {
                               <motion.button
                                 whileHover={{ scale: 1.05 }}
                                 whileTap={{ scale: 0.95 }}
-                                onClick={() => handlePayAndBook(selectedBookingForDetails)}
+                                onClick={() => { setShowBookingDetailsModal(false); setPaymentConfirm(selectedBookingForDetails); }}
                                 className="flex items-center justify-center space-x-1 px-4 py-2 bg-gradient-to-r from-green-500 to-green-600 text-white text-sm font-medium rounded-lg hover:from-green-600 hover:to-green-700 transition-all duration-200 shadow-lg shadow-green-500/25"
                               >
                                 <span>Pay & Book</span>
@@ -2290,8 +2802,77 @@ const Dashboard = () => {
           )}
         </AnimatePresence>
       </div>
+
+      {/* Payment Confirmation Modal */}
+      {paymentConfirm && (
+        <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+          <motion.div
+            initial={{ opacity: 0, scale: 0.9, y: 20 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            className="bg-white rounded-2xl shadow-2xl w-full max-w-sm p-6 space-y-5"
+          >
+            {/* Header */}
+            <div className="flex items-center space-x-3">
+              <div className="w-10 h-10 rounded-full bg-gradient-to-br from-emerald-400 to-green-600 flex items-center justify-center text-xl">
+                💳
+              </div>
+              <div>
+                <h2 className="text-lg font-bold text-gray-900">Confirm Payment</h2>
+                <p className="text-sm text-gray-500">Review your booking before paying</p>
+              </div>
+            </div>
+
+            {/* Booking Summary */}
+            <div className="bg-gray-50 rounded-xl p-4 space-y-2 text-sm">
+              <div className="flex justify-between">
+                <span className="text-gray-500">Car</span>
+                <span className="font-medium text-gray-900">
+                  {paymentConfirm.car?.make} {paymentConfirm.car?.model}
+                </span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-gray-500">Booking Ref</span>
+                <span className="font-mono text-gray-800 text-xs">
+                  #{paymentConfirm.bookingReference?.slice(-8)}
+                </span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-gray-500">Duration</span>
+                <span className="font-medium text-gray-900">
+                  {paymentConfirm.totalDays} day{paymentConfirm.totalDays !== 1 ? "s" : ""}
+                </span>
+              </div>
+              <div className="border-t border-gray-200 pt-2 flex justify-between">
+                <span className="font-semibold text-gray-700">Total</span>
+                <span className="font-bold text-emerald-600 text-base">
+                  ₹{Number(paymentConfirm.totalAmount).toLocaleString()}
+                </span>
+              </div>
+            </div>
+
+            {/* Action Buttons */}
+            <div className="flex space-x-3">
+              <button
+                onClick={() => setPaymentConfirm(null)}
+                className="flex-1 py-2.5 rounded-xl border border-gray-300 text-gray-700 font-medium hover:bg-gray-50 transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={() => handlePayAndBook(paymentConfirm)}
+                className="flex-1 py-2.5 rounded-xl bg-gradient-to-r from-emerald-500 to-green-600 text-white font-semibold hover:from-emerald-600 hover:to-green-700 transition-all shadow-lg shadow-green-500/30"
+              >
+                Confirm Payment
+              </button>
+            </div>
+          </motion.div>
+        </div>
+      )}
     </div>
   );
 };
 
 export default Dashboard;
+
+
+

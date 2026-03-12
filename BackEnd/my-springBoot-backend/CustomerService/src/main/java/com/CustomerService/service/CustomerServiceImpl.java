@@ -57,6 +57,15 @@ public class CustomerServiceImpl implements CustomerService {
                     existing.setDrivingLicenseNumber(updatedCustomer.getDrivingLicenseNumber());
                     existing.setDrivingLicenseImg(updatedCustomer.getDrivingLicenseImg());
                     existing.setDateOfBirth(updatedCustomer.getDateOfBirth());
+                    // Aadhaar fields
+                    if (updatedCustomer.getAadhaarNumber() != null)
+                        existing.setAadhaarNumber(updatedCustomer.getAadhaarNumber());
+                    if (updatedCustomer.getAadhaarImg() != null)
+                        existing.setAadhaarImg(updatedCustomer.getAadhaarImg());
+                    if (updatedCustomer.getAadhaarSelfieImg() != null)
+                        existing.setAadhaarSelfieImg(updatedCustomer.getAadhaarSelfieImg());
+                    if (updatedCustomer.getAadhaarStatus() != null)
+                        existing.setAadhaarStatus(updatedCustomer.getAadhaarStatus());
                     return customerRepository.save(existing);
                 }).orElseThrow(() -> new RuntimeException("Customer not found"));
     }
@@ -170,6 +179,15 @@ public class CustomerServiceImpl implements CustomerService {
                     Customer savedCustomer = customerRepository.save(existingCustomer);
                     System.out.println("Customer " + customerId + " status updated successfully to: " + savedCustomer.getDrivingLicenseStatus());
                     return savedCustomer;
+                }).orElseThrow(() -> new RuntimeException("Customer not found with ID: " + customerId));
+    }
+
+    @Override
+    public Customer updateAadhaarStatus(Integer customerId, String aadhaarStatus) {
+        return customerRepository.findById(customerId)
+                .map(existingCustomer -> {
+                    existingCustomer.setAadhaarStatus(aadhaarStatus);
+                    return customerRepository.save(existingCustomer);
                 }).orElseThrow(() -> new RuntimeException("Customer not found with ID: " + customerId));
     }
 

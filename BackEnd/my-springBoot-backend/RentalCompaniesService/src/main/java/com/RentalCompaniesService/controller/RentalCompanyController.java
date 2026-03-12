@@ -112,6 +112,15 @@ public class RentalCompanyController {
         return reviews;
     }
 
+    @GetMapping("/email/{email}")
+    public ResponseEntity<RentalCompany> getRentalCompanyByEmail(@PathVariable String email) {
+        RentalCompany company = rentalCompanyService.getRentalCompanyByEmail(email);
+        if (company == null) {
+            return ResponseEntity.notFound().build();
+        }
+        return ResponseEntity.ok(company);
+    }
+
     @GetMapping("total")
     public ResponseEntity<Long> totalComapnies(){
         Long total = rentalCompanyService.getCountOfComaponies();

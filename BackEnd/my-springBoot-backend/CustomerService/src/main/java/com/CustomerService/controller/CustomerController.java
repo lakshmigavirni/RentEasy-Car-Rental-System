@@ -3,6 +3,7 @@ package com.CustomerService.controller;
 import com.CustomerService.dto.BookingRequestDto;
 import com.CustomerService.dto.CarDto;
 import com.CustomerService.dto.ReviewDto;
+import com.CustomerService.dto.AadhaarStatusUpdateDto;
 import com.CustomerService.dto.StatusUpdateDto;
 import com.CustomerService.model.Customer;
 import com.CustomerService.service.CustomerService;
@@ -91,6 +92,14 @@ public class CustomerController {
             @PathVariable Integer customerId,
             @RequestBody StatusUpdateDto statusUpdate) {
         Customer updatedCustomer = customerService.updateCustomerStatus(customerId, statusUpdate.getStatus());
+        return ResponseEntity.ok(updatedCustomer);
+    }
+
+    @PutMapping("/{customerId}/aadhaar-status")
+    public ResponseEntity<Customer> updateAadhaarStatus(
+            @PathVariable Integer customerId,
+            @RequestBody AadhaarStatusUpdateDto dto) {
+        Customer updatedCustomer = customerService.updateAadhaarStatus(customerId, dto.getAadhaarStatus());
         return ResponseEntity.ok(updatedCustomer);
     }
 

@@ -6,6 +6,7 @@ import Navbar from "../Navbar"
 import ItemsPerPageSelector from "./ItemsPerPageSelector"
 import Pagination from "./Pagination"
 import { useLoading } from "../../Loader/LoadingProvider"
+import url from "../../URL"
 
 export default function Bookings() {
   const [searchTerm, setSearchTerm] = useState("")
@@ -23,17 +24,38 @@ export default function Bookings() {
     const fetchBookings = async () => {
       showLoader("Loading bookings data...");
       try {
-        const resId = await fetch("http://localhost:9090/auth/user/email", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
-          body: JSON.stringify({ email }),
-        });
+        // Get companyId from rental company by email
+        let id = null
+        try {
+          const companyRes = await fetch(`${url}/api/rental-company/email/${email}`, {
+            method: "GET",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${token}`,
+            },
+          })
+          if (companyRes.ok) {
+            const companyData = await companyRes.json()
+            id = companyData.companyId
+          }
+        } catch (e) {
+          console.warn("Failed to fetch company by email, trying fallback:", e)
+        }
 
-        const id = await resId.json();
-        const res = await fetch(`http://localhost:9090/api/bookings/companyId/${id}`, {
+        // Fallback: get userId from auth service
+        if (id === null) {
+          const resId = await fetch(`${url}/auth/user/email`, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${token}`,
+            },
+            body: JSON.stringify({ email }),
+          });
+          id = await resId.json();
+        }
+
+        const res = await fetch(`${url}/api/bookings/companyId/${id}`, {
           headers: {
             Authorization: `Bearer ${token}`,
           },
@@ -45,10 +67,10 @@ export default function Bookings() {
         const enrichedBookings = await Promise.all(
           bookingData.map(async (booking) => {
             const [carRes, customerRes] = await Promise.all([
-              fetch(`http://localhost:9090/api/cars/${booking.carId}`, {
+              fetch(`${url}/api/cars/${booking.carId}`, {
                 headers: { Authorization: `Bearer ${token}` },
               }),
-              fetch(`http://localhost:9090/api/customers/${booking.customerId}`, {
+              fetch(`${url}/api/customers/${booking.customerId}`, {
                 headers: { Authorization: `Bearer ${token}` },
               }),
             ])
@@ -57,7 +79,7 @@ export default function Bookings() {
             const customer = await customerRes.json()
             return {
               ...booking,
-              totalAmount: booking.totalAmount * 0.75,
+              totalAmount: booking.totalAmount,
               customerName: customer.fullName,
               customerPhone: customer.phoneNumber,
               customerEmail: customer.email,

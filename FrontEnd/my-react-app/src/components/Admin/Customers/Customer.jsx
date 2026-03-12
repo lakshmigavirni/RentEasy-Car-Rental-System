@@ -45,6 +45,58 @@ export default function Bookings() {
   }, []);
 
 
+  const handleAadhaarApprove = async (customerId) => {
+    try {
+      const response = await fetch(`http://localhost:9090/api/customers/${customerId}/aadhaar-status`, {
+        method: "PUT",
+        headers: {
+          "Authorization": `Bearer ${token}`,
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({ aadhaarStatus: "verified" })
+      });
+
+      if (response.ok) {
+        const updatedCustomer = await response.json();
+        setCustomers((prev) =>
+          prev.map((c) => (c.customerId === customerId ? updatedCustomer : c))
+        );
+        alert("Aadhaar approved successfully.");
+      } else {
+        alert("Failed to approve Aadhaar.");
+      }
+    } catch (error) {
+      console.error("Error approving Aadhaar:", error);
+      alert("Error approving Aadhaar.");
+    }
+  };
+
+  const handleAadhaarReject = async (customerId, reason) => {
+    try {
+      const response = await fetch(`http://localhost:9090/api/customers/${customerId}/aadhaar-status`, {
+        method: "PUT",
+        headers: {
+          "Authorization": `Bearer ${token}`,
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({ aadhaarStatus: "Rejected" })
+      });
+
+      if (response.ok) {
+        const updatedCustomer = await response.json();
+        setCustomers((prev) =>
+          prev.map((c) => (c.customerId === customerId ? updatedCustomer : c))
+        );
+        alert("Aadhaar rejected.");
+      } else {
+        alert("Failed to reject Aadhaar.");
+      }
+    } catch (error) {
+      console.error("Error rejecting Aadhaar:", error);
+      alert("Error rejecting Aadhaar.");
+    }
+  };
+
   const handleApprove = async (customerId) => {
     try {
       const response = await fetch(`http://localhost:9090/api/customers/${customerId}/status`, {
@@ -81,16 +133,22 @@ export default function Bookings() {
 
   const filterOptions = [
     { value: "all", label: "All Customer" },
-    { value: "pending", label: "Pending" },
-    { value: "verified", label: "Verified" },
+    { value: "pending", label: "License Pending" },
+    { value: "verified", label: "License Verified" },
+    { value: "aadhaar-pending", label: "Aadhaar Pending" },
   ]
 
   const filteredCustomers = customers.filter((customer) => {
     const matchesSearch =
       customer.fullName.toLowerCase().includes(searchTerm.toLowerCase()) ||
       customer.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      customer.address.toLowerCase().includes(searchTerm.toLowerCase())
-    const matchesFilter = filterStatus === "all" || customer.drivingLicenseStatus === filterStatus
+      (customer.address && customer.address.toLowerCase().includes(searchTerm.toLowerCase()))
+    const matchesFilter =
+      filterStatus === "all"
+        ? true
+        : filterStatus === "aadhaar-pending"
+          ? (customer.aadhaarStatus === "pending" || customer.aadhaarStatus === "PENDING")
+          : customer.drivingLicenseStatus === filterStatus
     return matchesSearch && matchesFilter
   })
   const totalPages = Math.ceil(filteredCustomers.length / itemsPerPage)
@@ -142,6 +200,8 @@ export default function Bookings() {
                 key={customer.customerId}
                 customer={customer}
                 onApprove={handleApprove}
+                onAadhaarApprove={handleAadhaarApprove}
+                onAadhaarReject={handleAadhaarReject}
               />
             ))}
           </div>

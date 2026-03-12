@@ -6,6 +6,7 @@ import Navbar from "../Navbar"
 import ItemsPerPageSelector from "../Booking/ItemsPerPageSelector"
 import Pagination from "../Booking/Pagination"
 import { useLoading } from "../../Loader/LoadingProvider"
+import url from "../../URL"
 
 export default function Payments() {
   const [searchTerm, setSearchTerm] = useState("")
@@ -23,24 +24,43 @@ export default function Payments() {
       try {
         const token = localStorage.getItem("token")
         const email = localStorage.getItem("email")
-        // 1. Get companyId from email
-        const resId = await fetch("http://localhost:9090/auth/user/email", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
-          body: JSON.stringify({ email }),
-        })
-        const companyId = await resId.json()
-        // 2. Get all payments for this company
-        const res = await fetch(`http://localhost:9090/api/payments/company/${companyId}`,
+
+        // Get companyId from rental company by email
+        let companyId = null
+        try {
+          const companyRes = await fetch(`${url}/api/rental-company/email/${email}`, {
+            method: "GET",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${token}`,
+            },
+          })
+          if (companyRes.ok) {
+            const companyData = await companyRes.json()
+            companyId = companyData.companyId
+          }
+        } catch (e) {
+          console.warn("Failed to fetch company by email, trying fallback:", e)
+        }
+
+        // Fallback: get userId from auth service
+        if (companyId === null) {
+          const resId = await fetch(`${url}/auth/user/email`, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${token}`,
+            },
+            body: JSON.stringify({ email }),
+          })
+          companyId = await resId.json()
+        }
+
+        // Get all payments for this company
+        const res = await fetch(`${url}/api/payments/company/${companyId}`,
           { headers: { Authorization: `Bearer ${token}` } })
         if (!res.ok) throw new Error("Failed to fetch payments")
         const paymentData = await res.json()
-        paymentData.forEach(payment => {
-          payment.amount = payment.amount * 0.75
-        })
         setPayments(paymentData)
       } catch (err) {
         setError(err)

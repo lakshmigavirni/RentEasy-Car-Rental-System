@@ -40,5 +40,13 @@ public class Customer {
 
     private String drivingLicenseStatus;
 
+    private String aadhaarNumber;
+
+    private String aadhaarImg;
+
+    @Column(name = "aadhaar_selfie_img", columnDefinition = "TEXT")
+    private String aadhaarSelfieImg;
+
+    private String aadhaarStatus;
 
 }

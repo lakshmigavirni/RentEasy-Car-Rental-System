@@ -2,6 +2,7 @@ package com.PaymentService.Service;
 import com.PaymentService.DTOs.*;
 import com.PaymentService.Entity.Payment;
 import com.PaymentService.Repository.PaymentRepository;
+import com.PaymentService.Service.strategy.PaymentStrategy;
 import com.stripe.exception.StripeException;
 import com.stripe.model.Event;
 import com.stripe.model.PaymentIntent;
@@ -30,6 +31,8 @@ public class PaymentServiceImpl implements PaymentService {
     private final StripeService stripeService;
     private final NotificationServiceClient notificationServiceClient;
     private final CurrencyConversionService currencyConversionService;
+    /** Keyed by payment method token, e.g. "card" -> CardPaymentStrategy */
+    private final Map<String, PaymentStrategy> paymentStrategies;
 
     @Value("${stripe.webhook.secret}")
     private String webhookSecret;
@@ -43,15 +46,17 @@ public class PaymentServiceImpl implements PaymentService {
     public PaymentServiceImpl(PaymentRepository paymentRepository,
                               BookingClient bookingClient,
                               RentalCompanyClient companyClient,
-                              StripeService stripeService, 
+                              StripeService stripeService,
                               NotificationServiceClient notificationServiceClient,
-                              CurrencyConversionService currencyConversionService) {
+                              CurrencyConversionService currencyConversionService,
+                              Map<String, PaymentStrategy> paymentStrategies) {
         this.paymentRepository = paymentRepository;
         this.bookingClient = bookingClient;
         this.companyClient = companyClient;
         this.stripeService = stripeService;
         this.notificationServiceClient = notificationServiceClient;
         this.currencyConversionService = currencyConversionService;
+        this.paymentStrategies = paymentStrategies;
     }
 
     public PaymentResponse createPaymentSession(PaymentRequest request) {
@@ -81,21 +86,48 @@ public class PaymentServiceImpl implements PaymentService {
                     request.getDescription() : "Car rental booking for " + booking.getBookingReference());
             payment.setStatus(Payment.PaymentStatus.PENDING);
 
-            // Create Stripe session request with converted amount
+            // Select payment strategy and build session request
+            String method = request.getPaymentMethod() != null
+                    ? request.getPaymentMethod().toLowerCase() : "card";
+            PaymentStrategy strategy = paymentStrategies.get(method);
+            if (strategy == null) {
+                throw new IllegalArgumentException("No payment strategy for method: " + method);
+            }
             StripeSessionRequest sessionRequest = new StripeSessionRequest();
-            sessionRequest.setAmount(amountInTargetCurrency); // Use converted amount for Stripe
-            sessionRequest.setCurrency(request.getCurrency());
-            sessionRequest.setCustomerEmail(request.getCustomerEmail());
-            sessionRequest.setDescription(payment.getDescription());
-            sessionRequest.setSuccessUrl(successUrl);
-            sessionRequest.setCancelUrl(cancelUrl);
-            sessionRequest.setBookingReference(booking.getBookingReference());
+            strategy.buildSession(sessionRequest, request, payment,
+                    amountInTargetCurrency, successUrl, cancelUrl, booking.getBookingReference());
 
-            // Create Stripe checkout session
+            // Create Stripe checkout session (real or mock — StripeService decides)
             Session session = stripeService.createCheckoutSession(sessionRequest);
 
             payment.setStripeSessionId(session.getId());
             payment = paymentRepository.save(payment);
+
+            // ── MOCK MODE: auto-complete payment & booking immediately ──────────
+            // In real Stripe, this is done by the webhook (checkout.session.completed).
+            // Since mock mode has no webhook, we replicate that flow right here.
+            if (session.getId() != null && session.getId().startsWith("mock_session_")) {
+                log.info("Mock mode: auto-completing payment and booking for session {}", session.getId());
+                try {
+                    payment.setStatus(Payment.PaymentStatus.COMPLETED);
+                    payment.setStripePaymentIntentId("mock_intent_" + session.getId());
+                    paymentRepository.save(payment);
+
+                    Map<String, String> statusUpdate = new HashMap<>();
+                    statusUpdate.put("status", "SUCCESS");
+                    bookingClient.updateBookingStatus(payment.getBookingId(), statusUpdate);
+                    log.info("Mock mode: booking {} updated to SUCCESS", payment.getBookingId());
+
+                    try {
+                        notificationServiceClient.sendBookingConfirmation(payment.getBookingId());
+                    } catch (Exception ne) {
+                        log.warn("Mock mode: notification failed (non-critical): {}", ne.getMessage());
+                    }
+                } catch (Exception e) {
+                    log.error("Mock mode: failed to auto-complete booking: {}", e.getMessage());
+                }
+            }
+            // ────────────────────────────────────────────────────────────────────
 
             // Prepare successful response
             response.setStatus("success");
@@ -115,6 +147,7 @@ public class PaymentServiceImpl implements PaymentService {
         }
         return response;
     }
+
 
     @Override
     public PaymentResponse getPaymentStatus(int paymentId) {

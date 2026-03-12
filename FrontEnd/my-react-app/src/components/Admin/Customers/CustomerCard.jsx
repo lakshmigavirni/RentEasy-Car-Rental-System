@@ -1,5 +1,5 @@
 import { useState } from "react"
-import { X, Eye, Check, Trash2, User, Phone, MapPin, CreditCard } from "lucide-react"
+import { X, Eye, Check, Trash2, User, Phone, MapPin, CreditCard, Award } from "lucide-react"
 import userImg from "../../../images/userImg.png"
 import { useLoading } from "../../Loader/LoadingProvider"
 import url from "../../URL"
@@ -10,11 +10,17 @@ const VerificationModal = ({
   onClose,
   onApprove,
   onDelete,
+  onAadhaarApprove,
+  onAadhaarReject,
 }) => {
   const [isApproving, setIsApproving] = useState(false)
   const [isDeleting, setIsDeleting] = useState(false)
+  const [isAadhaarApproving, setIsAadhaarApproving] = useState(false)
+  const [isAadhaarRejecting, setIsAadhaarRejecting] = useState(false)
   const [showRejectForm, setShowRejectForm] = useState(false)
+  const [showAadhaarRejectForm, setShowAadhaarRejectForm] = useState(false)
   const [rejectReason, setRejectReason] = useState("")
+  const [aadhaarRejectReason, setAadhaarRejectReason] = useState("")
   const token = localStorage.getItem("token")
   const { showLoader, hideLoader } = useLoading()
 
@@ -107,6 +113,33 @@ const VerificationModal = ({
       window.location.reload()
     }
   };
+  const handleAadhaarApprove = async () => {
+    if (!onAadhaarApprove) return
+    setIsAadhaarApproving(true)
+    showLoader("Approving Aadhaar...")
+    await onAadhaarApprove(customer.customerId)
+    setIsAadhaarApproving(false)
+    hideLoader()
+    window.location.reload()
+  }
+
+  const handleAadhaarReject = async () => {
+    if (!aadhaarRejectReason.trim()) {
+      alert("Please enter a rejection reason.")
+      return
+    }
+    setIsAadhaarRejecting(true)
+    showLoader("Rejecting Aadhaar...")
+    if (onAadhaarReject) {
+      await onAadhaarReject(customer.customerId, aadhaarRejectReason)
+    }
+    setIsAadhaarRejecting(false)
+    setShowAadhaarRejectForm(false)
+    setAadhaarRejectReason("")
+    hideLoader()
+    window.location.reload()
+  }
+
   const handleUnblock = async () => {
     setIsDeleting(true);
     showLoader("Blocking Customer...")
@@ -211,6 +244,109 @@ const VerificationModal = ({
             </div>
           </div>
 
+          {/* Aadhaar Section */}
+          {(customer.aadhaarNumber || customer.aadhaarImg || customer.aadhaarSelfieImg) && (
+            <div>
+              <h3 className="text-lg font-semibold text-gray-800 mb-3 flex items-center gap-2">
+                <Award className="w-5 h-5 text-blue-500" />
+                Aadhaar Card
+              </h3>
+              <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 space-y-4">
+                {customer.aadhaarNumber && (
+                  <div>
+                    <span className="font-medium text-gray-600">Aadhaar Number: </span>
+                    <span className="text-gray-800">{customer.aadhaarNumber.replace(/(\d{4})(?=\d)/g, "$1 ")}</span>
+                  </div>
+                )}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {customer.aadhaarImg && (
+                    <div>
+                      <p className="text-sm font-medium text-gray-600 mb-2">Aadhaar Card Image</p>
+                      <img
+                        src={customer.aadhaarImg}
+                        alt="Aadhaar Card"
+                        className="w-full max-w-xs rounded-lg shadow-md border border-gray-200"
+                      />
+                    </div>
+                  )}
+                  {customer.aadhaarSelfieImg && (
+                    <div>
+                      <p className="text-sm font-medium text-gray-600 mb-2">Selfie</p>
+                      <img
+                        src={customer.aadhaarSelfieImg}
+                        alt="Aadhaar Selfie"
+                        className="w-full max-w-xs rounded-lg shadow-md border border-gray-200"
+                      />
+                    </div>
+                  )}
+                </div>
+                <div className="text-sm text-gray-600">
+                  Status: <span className={`font-medium ${(customer.aadhaarStatus === "verified" ? "text-green-600" : customer.aadhaarStatus === "Rejected" ? "text-red-600" : "text-amber-600")}`}>
+                    {customer.aadhaarStatus || "Not submitted"}
+                  </span>
+                </div>
+                {(customer.aadhaarStatus === "pending" || customer.aadhaarStatus === "PENDING") && (
+                  <div className="flex flex-col sm:flex-row gap-3 pt-2 border-t border-blue-200">
+                    <button
+                      onClick={handleAadhaarApprove}
+                      disabled={isAadhaarApproving}
+                      className="flex-1 bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 text-white px-4 py-2 rounded-lg font-medium transition-colors flex items-center justify-center gap-2"
+                    >
+                      <Check className="w-4 h-4" />
+                      {isAadhaarApproving ? "Approving..." : "Approve Aadhaar"}
+                    </button>
+                    <button
+                      onClick={() => setShowAadhaarRejectForm(true)}
+                      disabled={isAadhaarRejecting}
+                      className="flex-1 bg-gray-400 hover:bg-gray-500 disabled:bg-gray-300 text-white px-4 py-2 rounded-lg font-medium transition-colors flex items-center justify-center gap-2"
+                    >
+                      <X className="w-4 h-4" />
+                      {isAadhaarRejecting ? "Rejecting..." : "Reject Aadhaar"}
+                    </button>
+                  </div>
+                )}
+              </div>
+              {showAadhaarRejectForm && (
+                <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-[60]">
+                  <div className="relative bg-white rounded-2xl border border-gray-200 shadow-2xl p-8 max-w-md w-full">
+                    <button
+                      onClick={() => setShowAadhaarRejectForm(false)}
+                      className="absolute top-3 right-3 p-2 rounded-full hover:bg-gray-100 transition-colors"
+                      disabled={isAadhaarRejecting}
+                    >
+                      <X className="h-5 w-5 text-gray-500" />
+                    </button>
+                    <h3 className="text-xl font-bold mb-4 text-gray-800">Reject Aadhaar</h3>
+                    <label className="block mb-2 text-gray-700 font-semibold">Reason for rejection</label>
+                    <textarea
+                      className="w-full border border-gray-300 rounded-xl p-3 mb-4 min-h-[90px] focus:outline-none focus:ring-2 focus:ring-blue-200"
+                      value={aadhaarRejectReason}
+                      onChange={(e) => setAadhaarRejectReason(e.target.value)}
+                      placeholder="Enter reason..."
+                      disabled={isAadhaarRejecting}
+                    />
+                    <div className="flex justify-end gap-2">
+                      <button
+                        onClick={() => setShowAadhaarRejectForm(false)}
+                        className="px-4 py-2 rounded-lg bg-gray-200 hover:bg-gray-300 text-gray-800 font-medium"
+                        disabled={isAadhaarRejecting}
+                      >
+                        Cancel
+                      </button>
+                      <button
+                        onClick={handleAadhaarReject}
+                        className="px-4 py-2 rounded-lg bg-red-600 hover:bg-red-700 text-white font-semibold"
+                        disabled={isAadhaarRejecting}
+                      >
+                        {isAadhaarRejecting ? "Rejecting..." : "Submit"}
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+
           {/* Action Buttons */}
           <div className="flex flex-col sm:flex-row gap-3 pt-4 border-t border-gray-200">
             {customer.drivingLicenseStatus !== "verified" ? (
@@ -290,7 +426,7 @@ const VerificationModal = ({
   )
 }
 
-const CustomerCard = ({ customer, onApprove = () => { } }) => {
+const CustomerCard = ({ customer, onApprove = () => {}, onAadhaarApprove, onAadhaarReject }) => {
   const [isModalOpen, setIsModalOpen] = useState(false)
 
   const getStatusColor = (status) => {
@@ -367,6 +503,14 @@ const CustomerCard = ({ customer, onApprove = () => { } }) => {
               </span>
             )}
           </div>
+          {(customer.aadhaarStatus === "pending" || customer.aadhaarStatus === "PENDING") && (
+            <div className="flex items-center gap-2">
+              <Award className="w-4 h-4 text-blue-500" />
+              <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-amber-100 text-amber-800 border border-amber-200">
+                Aadhaar Pending
+              </span>
+            </div>
+          )}
         </div>
 
         {/* Footer */}
@@ -383,6 +527,8 @@ const CustomerCard = ({ customer, onApprove = () => { } }) => {
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
         onApprove={onApprove}
+        onAadhaarApprove={onAadhaarApprove}
+        onAadhaarReject={onAadhaarReject}
       />
     </>
   )
