@@ -5,9 +5,9 @@ import Navbar from './Navbar';
 import { useNavigate } from 'react-router-dom';
 
 const AboutUs = () => {
-  const navigate=useNavigate();
+  const navigate = useNavigate();
   const stats = [
-  
+
   ];
 
   const features = [
@@ -45,25 +45,17 @@ const AboutUs = () => {
 
   const team = [
     {
-      name: 'Druman Kaneriya',
+      name: 'Lakshmi Gavirni',
       role: 'Full Stack Developer',
-      image: 'https://avatars.githubusercontent.com/u/116833054?v=4',
-      link: 'https://github.com/druman12',
-      description: 'A very knowledgeable person with extensive project experience, skilled in working with more than two technologies.'
-    },
-    {
-      name: 'Vasu Amrutiya',
-      role: 'Full Stack Developer',
-      image: 'https://avatars.githubusercontent.com/u/175853748?v=4',
-      link: 'https://github.com/vasuamrutiya12',
-      description: 'A tech visionary who built our backend with proper security, ensuring seamless experiences and efficient, fast data manipulations.'
-    },
-   
+      image: 'https://avatars.githubusercontent.com/u/120610931?v=4', // Assuming a generic or actual profile pic for lakshmigavirni
+      link: 'https://github.com/lakshmigavirni',
+      description: 'A dedicated Full Stack Developer driving the development of RentEasy with robust backend management and seamless user experiences.'
+    }
   ];
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-red-50 via-red-50 to-red-100">
-        <Navbar />
+      <Navbar />
       {/* Hero Section */}
       <div className="relative overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-r from-blue-600/10 to-indigo-600/10"></div>
@@ -74,7 +66,7 @@ const AboutUs = () => {
               <span className="bg-gradient-to-r from-red-600 to-orange-600 bg-clip-text text-transparent block sm:inline"> Car Rentals</span>
             </h1>
             <p className="text-lg sm:text-xl text-gray-600 max-w-3xl mx-auto leading-relaxed px-4">
-              We're the world's largest car rental marketplace, connecting travelers with the best vehicles 
+              We're the world's largest car rental marketplace, connecting travelers with the best vehicles
               at unbeatable prices from hundreds of trusted rental companies worldwide.
             </p>
           </div>
@@ -109,20 +101,20 @@ const AboutUs = () => {
               <h2 className="text-3xl sm:text-4xl font-bold text-gray-900 mb-4 sm:mb-6">Our Story</h2>
               <div className="space-y-4 sm:space-y-6 text-gray-600 text-base sm:text-lg leading-relaxed">
                 <p>
-                 RentEasy began as a small project with a clear goal: to make car rentals simple and convenient for everyone. We noticed that finding the right car at a good price often took too much time, and we wanted to create a better solution. </p>
+                  RentEasy began as a small project with a clear goal: to make car rentals simple and convenient for everyone. We noticed that finding the right car at a good price often took too much time, and we wanted to create a better solution. </p>
                 <p>
-                 At the start, we focused on building the basics of our platform. Our aim is to help users quickly search for available cars, compare options, and book the one that fits their needs. We’re keeping things simple while learning how to make the process smooth and reliable.
+                  At the start, we focused on building the basics of our platform. Our aim is to help users quickly search for available cars, compare options, and book the one that fits their needs. We’re keeping things simple while learning how to make the process smooth and reliable.
                 </p>
                 <p>
-                 Our journey is just beginning, and every small step helps us improve and get closer to our goal: making car rentals fast, easy, and stress-free for everyone.
+                  Our journey is just beginning, and every small step helps us improve and get closer to our goal: making car rentals fast, easy, and stress-free for everyone.
                 </p>
               </div>
             </div>
             <div className="relative order-1 lg:order-2">
               <div className="aspect-square bg-gradient-to-br from-blue-200 to-red-200 rounded-2xl sm:rounded-3xl overflow-hidden">
-                <img 
-                  src="https://images.unsplash.com/photo-1449824913935-59a10b8d2000?w=600&h=600&fit=crop" 
-                  alt="Modern car fleet" 
+                <img
+                  src="https://images.unsplash.com/photo-1449824913935-59a10b8d2000?w=600&h=600&fit=crop"
+                  alt="Modern car fleet"
                   className="w-full h-full object-cover mix-blend-overlay"
                 />
               </div>
@@ -194,8 +186,8 @@ const AboutUs = () => {
                   Join millions of satisfied customers who trust RentEasy for their car rental needs.
                 </p>
                 <button
-                onClick={() => navigate("/login")}
-                className="bg-white text-red-400 px-6 py-3 sm:px-8 sm:py-4 rounded-lg sm:rounded-xl font-semibold text-base sm:text-lg hover:bg-blue-50 transition-colors duration-300 shadow-lg hover:shadow-xl w-full sm:w-auto">
+                  onClick={() => navigate("/login")}
+                  className="bg-white text-red-400 px-6 py-3 sm:px-8 sm:py-4 rounded-lg sm:rounded-xl font-semibold text-base sm:text-lg hover:bg-blue-50 transition-colors duration-300 shadow-lg hover:shadow-xl w-full sm:w-auto">
                   Start Your Journey
                 </button>
               </div>

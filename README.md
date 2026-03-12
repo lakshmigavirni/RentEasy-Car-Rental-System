@@ -278,13 +278,13 @@ A big thank you to these amazing people for contributing to this project! 🙌
   <tbody>
     <tr>
       <td align="center" valign="top" width="14.28%">
-        <a href="https://github.com/vasuamrutiya12">
-          <img src="https://avatars.githubusercontent.com/u/175853748?v=4?s=100" width="100px;" alt="Vasu Amrutiya"/>
+        <a href="https://github.com/lakshmigavirni">
+          <img src="https://avatars.githubusercontent.com/u/120610931?v=4?s=100" width="100px;" alt="Lakshmi Gavirni"/>
           <br />
-          <sub><b>Vasu Amrutiya</b></sub>
+          <sub><b>Lakshmi Gavirni</b></sub>
         </a>
         <br />
-        <a href="https://github.com/druman12/SwiftRides/commits?author=vasuamrutiya12" title="Code">💻</a>
+        <a href="https://github.com/lakshmigavirni/RentEasy-Car-Rental-System/commits?author=lakshmigavirni" title="Code">💻</a>
       </td>
     </tr>
   </tbody>
